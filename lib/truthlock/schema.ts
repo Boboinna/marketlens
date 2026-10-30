@@ -1,0 +1,1 @@
+export type Status = "observed" | "confirmed" | "suggested" | "unknown";
