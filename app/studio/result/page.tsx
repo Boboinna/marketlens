@@ -39,13 +39,13 @@ export default function ResultPage() {
 
   const writeListing = useCallback(async () => {
     const st = useStudio.getState();
-    if (st.listingRuns >= MAX_LISTING_RUNS) return;
+    if (!st.runId || st.listingRuns >= MAX_LISTING_RUNS) return;
     setWriting(true);
     const id = progress.start(st.listingRuns ? "Rewriting your listing…" : "Writing your listing in 3 languages…");
     try {
-      const r = await api.listings(st.facts, st.wording);
+      const r = await api.listings(st.facts, st.wording, st.runId);
       const n = r.removed.en.length + r.removed.fr.length + r.removed.es.length;
-      set({ listings: r.listings, removed: r.removed, listingFor: factsKey(st.facts), listingRuns: st.listingRuns + 1 });
+      set({ listings: r.listings, removed: r.removed, listingFor: factsKey(st.facts), listingRuns: st.listingRuns + 1, quota: r.quota });
       progress.ok(id, "Listing ready", n ? `${n} unsupported ${n === 1 ? "claim was" : "claims were"} removed.` : "Switch languages any time. They’re already written.");
     } catch (e) {
       progress.fail(id, e, () => void writeListing());
@@ -56,17 +56,17 @@ export default function ResultPage() {
 
   const makeVisual = useCallback(async () => {
     const st = useStudio.getState();
-    if (!st.photo || !st.match || st.made >= VISUALS_PER_PRODUCT) return;
+    if (!st.photo || !st.match || !st.runId || st.made >= VISUALS_PER_PRODUCT) return;
     setBusy(true);
     const id = progress.start(st.made ? "Making a new visual…" : "Making your visual…");
     try {
       const out = await api.visual({
-        ...st.vo, original: st.photo.dataUrl, mask: st.match.maskPng, lang: st.lang,
+        ...st.vo, original: st.photo.dataUrl, mask: st.match.maskPng, runId: st.runId, lang: st.lang,
         title: productTitle(st.facts), details: infographicDetails(st.facts), size: sizeText(st.facts),
       });
       const v: Visual = { id: crypto.randomUUID(), image: out.image, fidelity: out.fidelity, polished: out.polished, style: st.vo.style, bg: st.vo.bg, ratio: st.vo.ratio };
       const cur = useStudio.getState(); // only a finished visual uses up an attempt
-      set({ visuals: [...cur.visuals, v], selected: cur.visuals.length, made: cur.made + 1 });
+      set({ visuals: [...cur.visuals, v], selected: cur.visuals.length, made: cur.made + 1, quota: out.quota });
       progress.ok(id, "Visual ready", out.polished ? `Product match ${out.fidelity}%` : "Made without the AI polish. Your product pixels are untouched.");
     } catch (e) {
       progress.fail(id, e, () => void makeVisual());

@@ -24,6 +24,8 @@ const MESSAGES: Record<string, [string, string]> = {
   bad_request: ["Something about that request was off", "Reload the page and try again."],
   bad_output: ["The AI’s answer was unreadable", "Try again."],
   no_match: ["Couldn’t outline the product", "Try a clearer photo with a plain background."],
+  quota_exceeded: ["You’ve used your free products", "That’s the free limit for this demo."],
+  regen_limit: ["Limit reached for this product", "You’ve used every attempt for this product. Start a new product to make more."],
   auth: ["The server can’t reach the AI", "Check MODEL_API_KEY in your environment."],
   billing: ["The AI account needs attention", "Check billing on the Meta Model API dashboard."],
 };

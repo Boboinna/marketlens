@@ -7,6 +7,8 @@ export class ApiError extends Error {
   constructor(public code: string, message: string, public retryable = false, public retryAfter?: number) { super(message); }
 }
 
+export interface QuotaInfo { used: number; limit: number; visualsLeft: number; listingLeft: number }
+
 export interface SegmentMatch { box: [number, number, number, number]; maskPng: string; score?: number }
 
 /** Handles JSON errors, non-JSON timeout pages, client timeouts and being offline. */
@@ -32,9 +34,11 @@ const post = <T,>(path: string, body: unknown) =>
   request<T>(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
 export const api = {
-  analyze: (image: string) => post<{ analysis: ModelAnalysis; facts: Fact[] }>("/api/analyze", { image }),
-  listings: (facts: Fact[], style = "") => post<{ listings: Listings; removed: Removed }>("/api/listing", { facts, style }),
-  visual: (b: VisualSettings & { original: string; mask: string; lang: Lang; title: string; details: { label: string; value: string }[]; size: string | null }) =>
-    post<{ image: string; fidelity: number; polished: boolean }>("/api/visual", b),
+  analyze: (image: string) => post<{ runId: string; analysis: ModelAnalysis; facts: Fact[]; quota: QuotaInfo }>("/api/analyze", { image }),
+  listings: (facts: Fact[], style: string, runId: string) =>
+    post<{ listings: Listings; removed: Removed; quota: QuotaInfo }>("/api/listing", { facts, style, runId }),
+  visual: (b: VisualSettings & { original: string; mask: string; runId: string; lang: Lang; title: string; details: { label: string; value: string }[]; size: string | null }) =>
+    post<{ image: string; fidelity: number; polished: boolean; quota: QuotaInfo }>("/api/visual", b),
+  quota: () => request<{ quota: QuotaInfo }>("/api/quota", { method: "GET" }),
   segment: (image: string, phrase: string) => post<{ match: SegmentMatch | null }>("/api/segment", { image, phrase }),
 };

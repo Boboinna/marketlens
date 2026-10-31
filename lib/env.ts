@@ -7,4 +7,5 @@ export const env = {
     if (!k) throw new AppError("auth", "MODEL_API_KEY is not set.", false, 500);
     return k;
   },
+  quotaEnabled: () => process.env.QUOTA_DISABLED !== "1",
 };

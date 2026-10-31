@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { AppError } from "@/lib/meta/errors";
 import { metaProvider } from "@/lib/providers/meta";
+import { assertCanWriteListing, commitListingWrite, summary } from "@/lib/server/quota";
 import { respond } from "@/lib/server/route";
 import type { VerifiedListings } from "@/lib/truthlock/schema";
 import { approvedFacts } from "@/lib/truthlock/status";
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 60; // raise only after confirming Fluid compute is on
 
 const Fact = z.object({
   key: z.string(), label: z.string(), value: z.string(),
@@ -13,16 +14,17 @@ const Fact = z.object({
   evidence: z.string().nullable(), point: z.tuple([z.number(), z.number()]).nullable(),
   options: z.array(z.string()).optional(), custom: z.boolean().optional(),
 });
-const Body = z.object({ facts: z.array(Fact).max(30), style: z.string().max(200).optional() });
+const Body = z.object({ facts: z.array(Fact).max(30), style: z.string().max(200).optional(), runId: z.string().max(40) });
 
 const VERIFY_MIN_MS = 20_000; // skip the second pass rather than risk the deadline
 
 /** One call writes English, French and Spanish. A stricter pass then removes anything the approved facts do not support. */
 export async function POST(req: Request) {
   return respond(async (ctx) => {
-    const { facts, style } = Body.parse(await req.json());
+    const { facts, style, runId } = Body.parse(await req.json());
     const approved = approvedFacts(facts);
     if (!approved.length) throw new AppError("bad_request", "Add at least one detail first.", false, 400);
+    await assertCanWriteListing(runId); // the first write and every rewrite count, enforced here
 
     const { en, fr, es } = await metaProvider.writeListings(approved, ctx, { style });
     const drafts = { en, fr, es };
@@ -34,7 +36,8 @@ export async function POST(req: Request) {
         // The verifier failing never blocks the listing. The claim check still runs in the browser.
       }
     }
+    await commitListingWrite(runId);
     const { removed, ...listings } = out;
-    return { listings, removed };
+    return { listings, removed, quota: await summary(runId) };
   });
 }

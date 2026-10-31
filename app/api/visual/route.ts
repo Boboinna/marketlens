@@ -1,21 +1,22 @@
 import { z } from "zod";
 import { BG_IDS } from "@/config/backgrounds";
-import { AppError } from "@/lib/meta/errors";
-import { parseDims } from "@/lib/pipeline/dims";
 import { RATIO_IDS, RATIOS, STYLE_IDS } from "@/config/image-styles";
 import { LANG_IDS } from "@/config/languages";
+import { AppError } from "@/lib/meta/errors";
 import { cutOut, detailCrop, fitTo, placeOnScene, regionOf, type Place } from "@/lib/pipeline/compose";
+import { parseDims } from "@/lib/pipeline/dims";
 import { MIN_SIMILARITY, similarity } from "@/lib/pipeline/guard";
 import { finish } from "@/lib/pipeline/overlay";
 import { buildPolishPrompt, buildScenePrompt } from "@/lib/pipeline/scene-prompt";
 import { metaProvider } from "@/lib/providers/meta";
+import { assertCanMakeVisual, commitVisual, summary } from "@/lib/server/quota";
 import { respond } from "@/lib/server/route";
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 60; // raise only after confirming Fluid compute is on
 
 const D = z.string().startsWith("data:image/");
 const Body = z.object({
-  original: D, mask: D,
+  original: D, mask: D, runId: z.string().max(40),
   style: z.enum(STYLE_IDS), ratio: z.enum(RATIO_IDS), bg: z.enum(BG_IDS), notes: z.string().max(200).optional(),
   lang: z.enum(LANG_IDS).default("en"),
   title: z.string().max(80).default(""),
@@ -34,9 +35,11 @@ const fromUrl = (u: string) => Buffer.from(u.split(",")[1] ?? "", "base64");
 export async function POST(req: Request) {
   return respond(async (ctx) => {
     const b = Body.parse(await req.json());
-    // Check what the style needs before any paid AI call.
+    // Check what the style needs, and the per-product cap, before any paid AI call.
     if (b.style === "size" && !(b.size && parseDims(b.size))) throw new AppError("bad_request", "Add a size with numbers, such as 34 x 30 cm.", false, 400);
     if (b.style === "infographic" && !b.details.length) throw new AppError("bad_request", "Confirm at least one detail for the infographic.", false, 400);
+    await assertCanMakeVisual(b.runId);
+
     const size = RATIOS[b.ratio].size;
     const cut = await cutOut(b.original, b.mask);
 
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
     }
 
     const final = await finish(image, place, { style: b.style, ratio: b.ratio, lang: b.lang, title: b.title, details: b.details, size: b.size });
-    return { image: `data:image/jpeg;base64,${final.toString("base64")}`, fidelity: Math.round(match * 1000) / 10, polished };
+    await commitVisual(b.runId); // counted only after a finished image exists
+    return { image: `data:image/jpeg;base64,${final.toString("base64")}`, fidelity: Math.round(match * 1000) / 10, polished, quota: await summary(b.runId) };
   });
 }

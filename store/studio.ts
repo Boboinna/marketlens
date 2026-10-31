@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { DEFAULT_VISUAL, type Ratio, type StyleId, type VisualSettings } from "@/config/image-styles";
-import type { SegmentMatch } from "@/lib/client/api";
+import type { QuotaInfo, SegmentMatch } from "@/lib/client/api";
 import type { Photo } from "@/lib/client/image-resize";
 import type { Lang } from "@/config/languages";
 import type { Fact, Listings, ModelAnalysis, Removed } from "@/lib/truthlock/schema";
@@ -11,6 +11,8 @@ export interface Visual { id: string; image: string; fidelity: number; polished:
 export type SegState = "idle" | "running" | "failed" | "done";
 
 interface State {
+  runId: string | null; // set by the server when the photo was read. Limits are counted against it.
+  quota: QuotaInfo | null;
   photo: Photo | null;
   match: SegmentMatch | null;
   cutout: string | null; // the product on transparent, made in the browser from the mask
@@ -30,6 +32,7 @@ interface State {
 }
 
 const fresh = () => ({
+  runId: null as string | null, quota: null as QuotaInfo | null,
   photo: null as Photo | null, match: null as SegmentMatch | null, cutout: null as string | null, segState: "idle" as SegState,
   analysis: null as ModelAnalysis | null, facts: [] as Fact[],
   lang: "en" as Lang, wording: "",

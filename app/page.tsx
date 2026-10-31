@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { ProductArt } from "@/components/brand/product-art";
+import { Showcase } from "@/components/landing/showcase";
 import { buttonClass } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { FREE_GENERATIONS } from "@/config/limits";
 
 const STEPS = [
   ["Add one photo", "Take it on your phone or upload it. We cut your product out of the background."],
-  ["Confirm the details", "MarketLens lists what it can see and asks you about the rest. Then you pick the language, image style and background."],
-  ["Get your listing and images", "Title, descriptions, highlights and tags in English, French or Spanish, plus studio images, all made from approved facts."],
+  ["Confirm the details", "MarketLens lists what it can see and asks you about the rest. Then you pick an image style and background."],
+  ["Get your listing and images", "Title, descriptions, highlights and tags in English, French and Spanish, plus studio images, all made from approved facts."],
 ];
 
 const USES = [
@@ -18,10 +19,10 @@ const USES = [
 ];
 
 const FAQ = [
-  ["Does it make things up?", "No. Details are marked observed, confirmed or unknown. Anything it can’t see stays blank until you fill it in, and a claim check flags wording your facts don’t support."],
-  ["Is my product redrawn?", "Your real product is cut out of your photo and kept intact. The AI builds the scene around it. Text on infographics and size charts is drawn by code from your confirmed details, so it is always exact."],
-  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models, and we ask them not to store requests. Finished listings are saved only in your browser, on this device."],
-  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} finished listings. There is no payment step yet.`],
+  ["Does it make things up?", "No. Details are marked observed, confirmed or unknown. Anything it can’t see stays blank until you fill it in. A second pass removes claims your facts don’t support, and a claim check flags the rest."],
+  ["Is my product redrawn?", "No. Your real product is cut out of your photo and kept intact. The AI builds the scene around it and blends light and shadow. If it changes your product too much, we fall back to the plain version. Text on infographics and size guides is drawn by code from your confirmed details, so it is always exact."],
+  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models, and we ask them not to store requests. Nothing is saved on a server. Download your images and text before you leave the page."],
+  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} finished products. There is no payment step yet.`],
 ];
 
 export default function Landing() {
@@ -37,13 +38,13 @@ export default function Landing() {
           <StatusChip status="confirmed" label="For online store owners" />
           <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">From one product photo to a ready-to-post listing.</h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-mu">
-            MarketLens writes your title, descriptions and tags in English, French or Spanish and makes studio images, using only details it can see or you confirm. No invented claims.
+            MarketLens writes your title, descriptions and tags in English, French and Spanish and makes studio images, using only details it can see or you confirm. No invented claims.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your first listing</Link>
             <a href="#how" className={buttonClass("ghost") + " !h-[52px]"}>How it works</a>
           </div>
-          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
+          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free products. No account needed.</p>
         </div>
         <div className="relative grid grid-cols-2 overflow-hidden rounded-2xl border border-line">
           <div className="flex aspect-[4/5] items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#303944,#141920_72%)]"><ProductArt width={190} /></div>
@@ -55,7 +56,9 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="how" className="border-t border-line pt-10">
+      <Showcase />
+
+      <section id="how" className="mt-14 border-t border-line pt-10">
         <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
         <ol className="mt-6 grid gap-6 sm:grid-cols-3">
           {STEPS.map(([t, s], i) => (
