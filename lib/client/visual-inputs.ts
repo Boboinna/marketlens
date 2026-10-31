@@ -8,9 +8,12 @@ export function sizeText(facts: Fact[]): string | null {
 }
 
 /** Up to three approved details for the infographic. Facts the seller has not approved never appear. */
-export function infographicDetails(facts: Fact[]): string[] {
+export function infographicDetails(facts: Fact[]): { label: string; value: string }[] {
   return approvedFacts(facts)
     .filter((f) => f.key !== "product_type" && f.key !== "size")
     .slice(0, 3)
-    .map((f) => `${f.label}: ${f.value.trim()}`);
+    .map((f) => ({ label: f.label, value: f.value.trim() }));
 }
+
+/** The confirmed product type, used as the infographic headline. */
+export const productTitle = (facts: Fact[]) => approvedFacts(facts).find((f) => f.key === "product_type")?.value.trim() ?? "";

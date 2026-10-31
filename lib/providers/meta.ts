@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- request/response shapes for Meta's custom models are not in the SDK types */
 import "server-only";
+import { toFile } from "openai";
 import sharp from "sharp";
 import { EFFORT, MODELS } from "@/config/models";
 import { meta, outputText } from "../meta/client";
 import { withRetry } from "../meta/retry";
 import { decodeSam } from "../meta/sam-decode";
-import { parseModelJson } from "../meta/parse";
+import { AppError, toAppError } from "../meta/errors";
+import { parseModelJson, sniffMime } from "../meta/parse";
 import { maskToFrame } from "../pipeline/mask";
 import { buildListingsPrompt, buildVerifyPrompt } from "../pipeline/listing-prompt";
 import { ANALYSIS_JSON_SCHEMA, LISTINGS_JSON_SCHEMA, Listings, ModelAnalysis, VERIFIED_JSON_SCHEMA, VerifiedListings } from "../truthlock/schema";
@@ -32,6 +34,43 @@ export const metaProvider: Provider = {
       text: { format: { type: "json_schema", name: "product_analysis", schema: ANALYSIS_JSON_SCHEMA, strict: true } },
     }, ctx);
     return parseModelJson(outputText(res), ModelAnalysis);
+  },
+
+  async scene(prompt, size, ctx) {
+    // Muse Image defaults to high reasoning with web search, image search and shell all on. For a plain
+    // background that only adds latency and can push the call past the route deadline, so turn them off.
+    const generate = (sz: string) => withRetry(
+      () => meta().images.generate({
+        model: MODELS.scene, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
+        reasoning_strength: "low",
+        tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
+      } as any, { signal: ctx.signal }),
+      { deadline: ctx.deadline },
+    );
+    let res: any;
+    try {
+      res = await generate(size);
+    } catch (e) {
+      // If this shape is not accepted, fall back to a square background. compose crops it to the wanted ratio.
+      if (size !== "1024x1024" && toAppError(e).code === "bad_request") res = await generate("1024x1024");
+      else throw e;
+    }
+    const b64: string | undefined = res?.data?.[0]?.b64_json;
+    if (!b64) throw new AppError("bad_output", "No image came back.", true, 502);
+    return `data:${sniffMime(b64)};base64,${b64}`;
+  },
+
+  /** Image-to-image: the composite goes in, a better-blended version comes out. The caller checks the product did not change. */
+  async polish(image, prompt, size, ctx) {
+    const file = await toFile(Buffer.from(image.split(",")[1] ?? "", "base64"), "composite.png", { type: "image/png" });
+    const res: any = await meta().images.edit({
+      model: MODELS.scene, image: file, prompt, n: 1, size, response_format: "b64_json", output_format: "jpeg",
+      reasoning_strength: "low",
+      tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
+    } as any, { signal: ctx.signal });
+    const b64: string | undefined = res?.data?.[0]?.b64_json;
+    if (!b64) throw new AppError("bad_output", "No image came back.", true, 502);
+    return `data:${sniffMime(b64)};base64,${b64}`;
   },
 
   async writeListings(facts, ctx, opts) {
