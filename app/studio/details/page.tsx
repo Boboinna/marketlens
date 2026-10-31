@@ -102,7 +102,7 @@ export default function DetailsPage() {
           {styleById(vo.style).label} · {vo.ratio} {RATIOS[vo.ratio].label} · {bgById(vo.bg).label}
         </p>
         <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Back</Button>
-        <Button disabled={approvedFacts(facts).length === 0} onClick={() => router.push("/studio/result")}>Continue</Button>
+        <Button disabled={approvedFacts(facts).length === 0} onClick={() => router.push("/studio/result")}>Create listing and visuals</Button>
       </StickyBar>
     </div>
   );

@@ -24,7 +24,7 @@ export default function UploadPage() {
     const id = progress.start("Preparing your photo…");
     try {
       const p = await resizeImage(file);
-      set({ photo: p, match: null, cutout: null, segState: "idle", analysis: null, facts: [], listings: null, listingFor: null, listingRuns: 0 }); // a new photo starts over
+      set({ photo: p, match: null, cutout: null, segState: "idle", analysis: null, facts: [], listings: null, listingFor: null, listingRuns: 0, visuals: [], selected: 0, made: 0 }); // a new photo starts over
       progress.ok(id, "Photo ready");
     } catch (e) {
       progress.fail(id, e, () => handle(file));
