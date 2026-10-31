@@ -1,22 +1,28 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { PhotoStage } from "@/components/studio/photo-stage";
 import { StickyBar } from "@/components/studio/sticky-bar";
 import { Button } from "@/components/ui/button";
+import { useSegment } from "@/hooks/use-segment";
 import { resizeImage } from "@/lib/client/image-resize";
 import { notify, progress } from "@/lib/toast";
 import { useStudio } from "@/store/studio";
 
 export default function UploadPage() {
-  const { photo, set } = useStudio();
+  const router = useRouter();
+  const { photo, cutout, segState, set } = useStudio();
+  const { run } = useSegment(); // starts outlining the product as soon as a photo is set
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<"original" | "cutout">("cutout");
 
   const handle = useCallback(async (file: File) => {
     setBusy(true);
     const id = progress.start("Preparing your photo…");
     try {
-      set({ photo: await resizeImage(file) });
+      const p = await resizeImage(file);
+      set({ photo: p, match: null, cutout: null, segState: "idle" }); // a new photo restarts the outline
       progress.ok(id, "Photo ready");
     } catch (e) {
       progress.fail(id, e, () => handle(file));
@@ -31,20 +37,33 @@ export default function UploadPage() {
     onDropRejected: () => notify.warn("That file isn’t an image", "Choose a JPG or PNG photo."),
   });
 
+  const showCutout = view === "cutout" && !!cutout;
+
   return (
     <div className="mx-auto max-w-xl">
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Start with one product photo</h1>
-      <p className="mt-2 text-mu">We read what’s visible, ask you about the rest, then write the listing and make your images.</p>
+      <p className="mt-2 text-mu">We cut your product out of the background first. It stays exactly as you photographed it.</p>
 
-      <div
-        {...getRootProps()}
-        className={`mt-6 rounded-2xl border-[1.5px] border-dashed p-6 text-center sm:p-8 ${isDragActive ? "border-tx bg-s2" : "border-[#3a434e] bg-s1"}`}
-      >
+      <div {...getRootProps()} className={`mt-6 rounded-2xl border-[1.5px] border-dashed p-6 text-center sm:p-8 ${isDragActive ? "border-tx bg-s2" : "border-[#3a434e] bg-s1"}`}>
         <input {...getInputProps()} />
         {photo ? (
           <>
-            <PhotoStage src={photo.dataUrl} />
-            <p className="mt-3 font-mono text-xs text-mu">{photo.width} × {photo.height}px</p>
+            <PhotoStage src={showCutout ? cutout! : photo.dataUrl} checker={showCutout} alt={showCutout ? "Your product, cut out" : "Your product photo"} />
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div role="group" aria-label="Preview" className="flex gap-2">
+                {(["cutout", "original"] as const).map((v) => (
+                  <button
+                    key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}
+                    className={`rounded-xl border px-3.5 py-1.5 text-sm font-medium ${view === v ? "border-tx bg-tx text-bg" : "border-line bg-s2"}`}
+                  >{v === "cutout" ? "Cutout" : "Original"}</button>
+                ))}
+              </div>
+              <p className="font-mono text-xs text-mu" role="status">
+                {segState === "running" && "Outlining your product…"}
+                {segState === "done" && "Outline ready"}
+                {segState === "failed" && <button type="button" onClick={() => void run()} className="underline underline-offset-4">Outline failed. Try again</button>}
+              </p>
+            </div>
           </>
         ) : (
           <div className="flex flex-col items-center gap-3">
@@ -57,7 +76,7 @@ export default function UploadPage() {
 
       <StickyBar>
         <Button variant="ghost" disabled={busy} onClick={open}>{photo ? "Replace photo" : "Choose photo"}</Button>
-        <Button disabled>Continue</Button>
+        <Button disabled={!photo || busy} onClick={() => router.push("/studio/details")}>Continue</Button>
       </StickyBar>
     </div>
   );
