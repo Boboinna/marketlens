@@ -1,14 +1,20 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { AddDetail } from "@/components/studio/add-detail";
 import { FactRow } from "@/components/studio/fact-row";
 import { PhotoStage, type Pin } from "@/components/studio/photo-stage";
+import { ImageSettings } from "@/components/studio/image-settings";
 import { Section } from "@/components/studio/section";
 import { StickyBar } from "@/components/studio/sticky-bar";
 import { Button } from "@/components/ui/button";
+import { bgById } from "@/config/backgrounds";
 import { CORE_FIELDS } from "@/config/facts";
+import { RATIOS, styleById } from "@/config/image-styles";
 import { useRequirePhoto } from "@/hooks/use-require-photo";
 import { useSegment } from "@/hooks/use-segment";
+import { infographicDetails, sizeText } from "@/lib/client/visual-inputs";
+import { notify } from "@/lib/toast";
 import type { Fact } from "@/lib/truthlock/schema";
 import { addCustomFact, confirmFact, pendingCount, removeFact, setSellerValue } from "@/lib/truthlock/status";
 import { useStudio } from "@/store/studio";
@@ -18,8 +24,18 @@ const CORE = new Map(CORE_FIELDS.map((c) => [c.key, c]));
 export default function DetailsPage() {
   const router = useRouter();
   const ready = useRequirePhoto();
-  const { photo, facts, set } = useStudio();
+  const { photo, facts, vo, set } = useStudio();
   const { run, segState } = useSegment();
+  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0;
+
+  // A style that needs a detail the seller has since cleared falls back to the Hero shot.
+  useEffect(() => {
+    if ((vo.style === "size" && !hasSize) || (vo.style === "infographic" && !hasDetails)) {
+      set({ vo: { ...vo, style: "hero" } });
+      notify.info("Switched to Hero shot", "The style you picked needs a detail that is now blank.");
+    }
+  }, [vo, hasSize, hasDetails, set]);
+
   if (!ready || !photo) return <div className="h-96 animate-pulse rounded-2xl bg-s1" aria-busy="true" />;
 
   const update = (key: string, fn: (f: Fact) => Fact) => set({ facts: facts.map((f) => (f.key === key ? fn(f) : f)) });
@@ -42,7 +58,7 @@ export default function DetailsPage() {
     <div className="grid gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-8">
       <div className="md:sticky md:top-6 md:self-start">
         <PhotoStage src={photo.dataUrl} pins={pins} />
-        <p className="mt-3 text-xs text-mu">Pins match the numbered rows. Nothing is made until you press Continue.</p>
+        <p className="mt-3 text-xs text-mu">Pins match the numbered rows. Nothing is made until you continue.</p>
         {segState === "failed" && (
           <button type="button" onClick={() => void run()} className="mt-2 text-xs underline underline-offset-4">Couldn’t outline the product. Try again</button>
         )}
@@ -75,9 +91,16 @@ export default function DetailsPage() {
             {sizeBlank && " Tip: add a size or amount, because buyers look for it."}
           </p>
         </Section>
+
+        <Section n={2} title="Images" hint="Your real product is cut out and placed in the scene. Pick how it should look.">
+          <ImageSettings value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails} />
+        </Section>
       </div>
 
       <StickyBar>
+        <p className="mr-auto hidden min-w-0 truncate text-xs text-mu lg:block">
+          {styleById(vo.style).label} · {vo.ratio} {RATIOS[vo.ratio].label} · {bgById(vo.bg).label}
+        </p>
         <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Back</Button>
         <Button disabled>Continue</Button>
       </StickyBar>
