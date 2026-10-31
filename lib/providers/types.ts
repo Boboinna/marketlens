@@ -1,4 +1,4 @@
-import type { ModelAnalysis } from "../truthlock/schema";
+import type { Fact, Listings, ModelAnalysis, VerifiedListings } from "../truthlock/schema";
 
 export interface Ctx { signal: AbortSignal; deadline: number }
 
@@ -10,5 +10,7 @@ export interface SegmentMatch {
 
 export interface Provider {
   analyze(imageDataUrl: string, ctx: Ctx): Promise<ModelAnalysis>;
+  writeListings(facts: Fact[], ctx: Ctx, opts?: { style?: string }): Promise<Listings>;
+  verifyListings(facts: Fact[], drafts: Listings, ctx: Ctx): Promise<VerifiedListings>;
   segment(imageDataUrl: string, phrase: string, ctx: Ctx): Promise<SegmentMatch | null>;
 }

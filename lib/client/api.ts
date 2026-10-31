@@ -1,5 +1,5 @@
 import { CLIENT_TIMEOUT_MS } from "@/config/limits";
-import type { Fact, ModelAnalysis } from "../truthlock/schema";
+import type { Fact, Listings, ModelAnalysis, Removed } from "../truthlock/schema";
 
 export class ApiError extends Error {
   constructor(public code: string, message: string, public retryable = false, public retryAfter?: number) { super(message); }
@@ -31,5 +31,6 @@ const post = <T,>(path: string, body: unknown) =>
 
 export const api = {
   analyze: (image: string) => post<{ analysis: ModelAnalysis; facts: Fact[] }>("/api/analyze", { image }),
+  listings: (facts: Fact[], style = "") => post<{ listings: Listings; removed: Removed }>("/api/listing", { facts, style }),
   segment: (image: string, phrase: string) => post<{ match: SegmentMatch | null }>("/api/segment", { image, phrase }),
 };

@@ -65,3 +65,6 @@ export const isApproved = (f: Fact) =>
 
 export const approvedFacts = (facts: Fact[]) => facts.filter(isApproved);
 export const pendingCount = (facts: Fact[]) => facts.filter((f) => !isApproved(f)).length;
+
+/** A fingerprint of the approved facts. If it changes after a listing was written, the listing is out of date. */
+export const factsKey = (facts: Fact[]) => JSON.stringify(approvedFacts(facts).map((f) => [f.key, f.label, f.value.trim()]));

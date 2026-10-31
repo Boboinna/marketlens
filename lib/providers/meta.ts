@@ -7,7 +7,8 @@ import { withRetry } from "../meta/retry";
 import { decodeSam } from "../meta/sam-decode";
 import { parseModelJson } from "../meta/parse";
 import { maskToFrame } from "../pipeline/mask";
-import { ANALYSIS_JSON_SCHEMA, ModelAnalysis } from "../truthlock/schema";
+import { buildListingsPrompt, buildVerifyPrompt } from "../pipeline/listing-prompt";
+import { ANALYSIS_JSON_SCHEMA, LISTINGS_JSON_SCHEMA, Listings, ModelAnalysis, VERIFIED_JSON_SCHEMA, VerifiedListings } from "../truthlock/schema";
 import type { Ctx, Provider } from "./types";
 
 const ANALYZE_PROMPT = `You inspect one product photo for an online store seller. The product can be anything: clothing or cloth, a bottle or other item, packaged branded goods, and so on.
@@ -31,6 +32,24 @@ export const metaProvider: Provider = {
       text: { format: { type: "json_schema", name: "product_analysis", schema: ANALYSIS_JSON_SCHEMA, strict: true } },
     }, ctx);
     return parseModelJson(outputText(res), ModelAnalysis);
+  },
+
+  async writeListings(facts, ctx, opts) {
+    const res = await respondCall({
+      model: MODELS.listing, reasoning: { effort: EFFORT.listing }, store: false, max_output_tokens: 6000,
+      input: [{ role: "user", content: [{ type: "input_text", text: buildListingsPrompt(facts, opts?.style) }] }],
+      text: { format: { type: "json_schema", name: "listings", schema: LISTINGS_JSON_SCHEMA, strict: true } },
+    }, ctx);
+    return parseModelJson(outputText(res), Listings);
+  },
+
+  async verifyListings(facts, drafts, ctx) {
+    const res = await respondCall({
+      model: MODELS.listing, reasoning: { effort: EFFORT.listing }, store: false, max_output_tokens: 6000,
+      input: [{ role: "user", content: [{ type: "input_text", text: buildVerifyPrompt(facts, drafts) }] }],
+      text: { format: { type: "json_schema", name: "verified_listings", schema: VERIFIED_JSON_SCHEMA, strict: true } },
+    }, ctx);
+    return parseModelJson(outputText(res), VerifiedListings);
   },
 
   async segment(image, phrase, ctx) {

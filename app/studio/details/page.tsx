@@ -16,7 +16,7 @@ import { useSegment } from "@/hooks/use-segment";
 import { infographicDetails, sizeText } from "@/lib/client/visual-inputs";
 import { notify } from "@/lib/toast";
 import type { Fact } from "@/lib/truthlock/schema";
-import { addCustomFact, confirmFact, pendingCount, removeFact, setSellerValue } from "@/lib/truthlock/status";
+import { addCustomFact, approvedFacts, confirmFact, pendingCount, removeFact, setSellerValue } from "@/lib/truthlock/status";
 import { useStudio } from "@/store/studio";
 
 const CORE = new Map(CORE_FIELDS.map((c) => [c.key, c]));
@@ -102,7 +102,7 @@ export default function DetailsPage() {
           {styleById(vo.style).label} · {vo.ratio} {RATIOS[vo.ratio].label} · {bgById(vo.bg).label}
         </p>
         <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Back</Button>
-        <Button disabled>Continue</Button>
+        <Button disabled={approvedFacts(facts).length === 0} onClick={() => router.push("/studio/result")}>Continue</Button>
       </StickyBar>
     </div>
   );
