@@ -51,7 +51,7 @@ export default function MyListings() {
         <div className="mt-8 rounded-2xl border border-dashed border-[#3a434e] p-8 text-center sm:p-10">
           <p className="text-lg font-semibold">No listings yet</p>
           <p className="mt-1 text-sm text-mu">Your finished products will show up here.</p>
-          <Link href="/studio/upload" className={`${buttonClass("primary")} mt-5`}>Create your first listing</Link>
+          <Link href="/studio/upload" className={`${buttonClass("primary")} mt-5`}>Create your listing</Link>
         </div>
       ) : (
         <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -62,7 +62,7 @@ export function ImageSettings({ value, onChange, hasSize, hasDetails }: Props) {
           ))}
         </div>
         <p className="mt-2 flex flex-wrap justify-between gap-x-3 text-xs text-mu">
-          <span>Every image is made as an Amazon listing image, and your product is never redesigned.</span>
+          <span>Your product is never redesigned.</span>
           <span className="font-mono">{value.notes.length}/{NOTES_MAX}</span>
         </p>
       </div>

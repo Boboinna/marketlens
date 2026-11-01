@@ -32,7 +32,6 @@ export default function Landing() {
         <Logo />
         <nav className="flex items-center gap-2">
           <Link href="/listings" className={buttonClass("ghost") + " !h-10 !px-4 !text-sm"}>My listings</Link>
-          <Link href="/studio/upload" className={buttonClass("primary") + " !h-10 !px-4 !text-sm"}>Start free</Link>
         </nav>
       </header>
 
@@ -44,7 +43,7 @@ export default function Landing() {
             MarketLens writes your title, descriptions and tags in English, French and Spanish and makes Amazon-style listing images with AI, using only details it can see or you confirm. No invented claims.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your first listing</Link>
+            <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your listing</Link>
             <a href="#how" className={buttonClass("ghost") + " !h-[52px]"}>How it works</a>
           </div>
           <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
