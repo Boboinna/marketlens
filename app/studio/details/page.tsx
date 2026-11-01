@@ -16,7 +16,7 @@ import { langName } from "@/config/languages";
 import type { Template } from "@/config/templates";
 import { useRequirePhoto } from "@/hooks/use-require-photo";
 import { useSegment } from "@/hooks/use-segment";
-import { infographicDetails, sizeText } from "@/lib/client/visual-inputs";
+import { infographicDetails, productTitle, sizeText } from "@/lib/client/visual-inputs";
 import { saveMyTemplate } from "@/lib/client/templates";
 import { notify } from "@/lib/toast";
 import type { Fact } from "@/lib/truthlock/schema";
@@ -47,8 +47,8 @@ export default function DetailsPage() {
   const blank = pendingCount(facts);
   const waiting = facts.filter((f) => f.status === "suggested").length;
   const sizeBlank = !facts.find((f) => f.key === "size")?.value.trim();
-  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0;
-  const styleOk = !((vo.style === "size" && !hasSize) || (vo.style === "infographic" && !hasDetails));
+  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0, hasTitle = !!productTitle(facts);
+  const styleOk = !((vo.style === "size" && !hasSize) || (vo.style === "infographic" && !hasDetails) || (vo.style === "social" && !hasTitle));
   const canCreate = approvedFacts(facts).length > 0;
 
   const saveTemplate = () => {
@@ -102,7 +102,7 @@ export default function DetailsPage() {
           <p className="mt-4 text-sm text-mu">
             {blank ? `${blank} blank ${blank === 1 ? "detail is" : "details are"} left out of your listing.` : "All details are filled in."}
             {waiting > 0 && ` ${waiting} AI-suggested ${waiting === 1 ? "detail waits" : "details wait"} for your OK.`}
-            {sizeBlank && " Tip: add a size or amount, because buyers look for it."}
+            {sizeBlank && " Tip: add a size or amount, because buyers look for it. Measurements like 34 x 24 cm unlock the Size chart style."}
           </p>
         </Section>
 
@@ -120,8 +120,8 @@ export default function DetailsPage() {
           </div>
         </Section>
 
-        <Section n={3} title="Images" hint="Your real product is cut out, then the AI builds an Amazon-style listing image around it. Your product is never redesigned.">
-          <ImageSettings value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails} />
+        <Section n={3} title="Images" hint="Your real product is cut out, then the AI builds an Amazon-style marketing image around it. Your product is never redesigned.">
+          <ImageSettings value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails} hasTitle={hasTitle} />
           <div className="mt-6 border-t border-line pt-4">
             {tplName === null ? (
               <button onClick={() => setTplName("")} className="min-h-9 text-sm underline underline-offset-4">Save these settings as a template</button>

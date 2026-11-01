@@ -9,9 +9,9 @@ export interface SegmentMatch {
 }
 
 export interface Provider {
-  analyze(imageDataUrl: string, ctx: Ctx): Promise<ModelAnalysis>;
+  analyze(imageDataUrls: string[], ctx: Ctx): Promise<ModelAnalysis>; // first is the main photo
   /** Image-to-image: the seller’s real product (cut out, on a plain canvas) goes in, a finished AI listing image comes out. */
-  listingVisual(inputDataUrl: string, prompt: string, size: string, ctx: Ctx): Promise<string>; // data URL
+  listingVisual(inputDataUrl: string, refDataUrls: string[], prompt: string, size: string, ctx: Ctx): Promise<string>; // data URL
   writeListings(facts: Fact[], ctx: Ctx, opts?: { style?: string }): Promise<Listings>;
   verifyListings(facts: Fact[], drafts: Listings, ctx: Ctx): Promise<VerifiedListings>;
   segment(imageDataUrl: string, phrase: string, ctx: Ctx): Promise<SegmentMatch | null>;

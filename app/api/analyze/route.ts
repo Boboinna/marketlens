@@ -6,13 +6,15 @@ import { toFacts } from "@/lib/truthlock/status";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const Body = z.object({ image: z.string().startsWith("data:image/") });
+const D = z.string().startsWith("data:image/");
+// One to three photos of the same product. Only the first is required.
+const Body = z.object({ images: z.array(D).min(1).max(3) });
 
 export async function POST(req: Request) {
   return respond(async (ctx) => {
-    const { image } = Body.parse(await req.json());
+    const { images } = Body.parse(await req.json());
     await assertCanStart(); // before any paid call
-    const analysis = await metaProvider.analyze(image, ctx);
+    const analysis = await metaProvider.analyze(images, ctx);
     const runId = await commitRun(); // counted only after the first model call worked
     return { runId, analysis, facts: toFacts(analysis), quota: await summary(runId) };
   });

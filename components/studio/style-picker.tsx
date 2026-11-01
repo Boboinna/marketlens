@@ -1,34 +1,24 @@
 "use client";
 import { IMAGE_STYLES, type StyleId } from "@/config/image-styles";
+import { ImageSelect } from "./image-select";
 
-interface Props { value: StyleId; onChange: (id: StyleId) => void; blocked: (id: StyleId) => string | null }
+interface Props { value: StyleId; onChange: (id: StyleId) => void; blocked: (id: StyleId) => string | null; compact?: boolean }
 
-/** Image styles shown as example pictures. A style that needs a detail the seller hasn't given says what is missing. */
-export function StylePicker({ value, onChange, blocked }: Props) {
-  const cur = IMAGE_STYLES.find((s) => s.id === value)!;
+/** Image style as a dropdown with a small example picture on the right of each option. A style that needs a detail says what is missing. */
+export function StylePicker({ value, onChange, blocked, compact }: Props) {
+  const cur = IMAGE_STYLES.find((s) => s.id === value) ?? IMAGE_STYLES[0];
   return (
     <div>
-      <div role="radiogroup" aria-label="Image style" className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5">
-        {IMAGE_STYLES.map((s) => {
-          const why = blocked(s.id);
-          return (
-            <button
-              key={s.id} type="button" role="radio" aria-checked={s.id === value} disabled={!!why} title={why ?? undefined}
-              onClick={() => onChange(s.id)}
-              className={`overflow-hidden rounded-xl border-2 bg-s2 text-left disabled:cursor-not-allowed disabled:opacity-45 ${s.id === value ? "border-tx" : "border-transparent hover:border-line"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={s.thumb} alt="" loading="lazy" className="aspect-square w-full object-cover" />
-              <span className="block truncate px-2.5 py-2 text-[13px] font-medium sm:text-sm">{s.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-2.5 text-[13px] text-mu">
-        {cur.description}
-        {cur.hasText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">AI writes the text from your confirmed details</span>}
-      </p>
-      {IMAGE_STYLES.filter((s) => blocked(s.id)).map((s) => <p key={s.id} className="mt-1 text-xs text-mu">{s.label}: {blocked(s.id)}</p>)}
+      <ImageSelect
+        label="Image style" value={value} onChange={(id) => onChange(id as StyleId)}
+        options={IMAGE_STYLES.map((s) => ({ id: s.id, label: s.label, thumb: s.thumb, isNew: s.isNew, blocked: blocked(s.id) }))}
+      />
+      {!compact && (
+        <p className="mt-2 text-[13px] text-mu">
+          {cur.description}
+          {cur.hasText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">AI writes the text from your confirmed details</span>}
+        </p>
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { buildListingsPrompt, buildVerifyPrompt } from "../pipeline/listing-prom
 import { ANALYSIS_JSON_SCHEMA, LISTINGS_JSON_SCHEMA, Listings, ModelAnalysis, VERIFIED_JSON_SCHEMA, VerifiedListings } from "../truthlock/schema";
 import type { Ctx, Provider } from "./types";
 
-const ANALYZE_PROMPT = `You inspect one product photo for an online store seller. The product can be anything: clothing or cloth, a bottle or other item, packaged branded goods, and so on.
+const ANALYZE_PROMPT = `You inspect product photos for an online store seller. The first photo is the main one; any other photos show the same product from another angle (for example the back). Combine what is visible across all photos, and place every point and box on the FIRST photo only. The product can be anything: clothing or cloth, a bottle or other item, packaged branded goods, and so on.
 Report only what is plainly visible, including text printed on the item or its label. If a detail cannot be seen, set visible=false and value=null. Never guess.
 Always return these attributes with these exact keys: product_type (what it is), brand (brand or name, only if printed or clearly visible), color, size (only if a size or amount is printed, such as weight or capacity), condition (always visible=false; the seller decides).
 Then add at most 4 other clearly visible details (a feature, a flavor printed on the label, a pattern), each with a short snake_case key and a plain label.
@@ -27,10 +27,10 @@ export async function respondCall(body: Record<string, unknown>, ctx: Ctx) {
 }
 
 export const metaProvider: Provider = {
-  async analyze(image, ctx) {
+  async analyze(images, ctx) {
     const res = await respondCall({
       model: MODELS.analyze, reasoning: { effort: EFFORT.analyze }, store: false, max_output_tokens: 4000,
-      input: [{ role: "user", content: [{ type: "input_text", text: ANALYZE_PROMPT }, { type: "input_image", image_url: image }] }],
+      input: [{ role: "user", content: [{ type: "input_text", text: ANALYZE_PROMPT }, ...images.map((image_url) => ({ type: "input_image", image_url }))] }],
       text: { format: { type: "json_schema", name: "product_analysis", schema: ANALYSIS_JSON_SCHEMA, strict: true } },
     }, ctx);
     return parseModelJson(outputText(res), ModelAnalysis);
@@ -40,26 +40,37 @@ export const metaProvider: Provider = {
    * Image-to-image with Muse Image. The seller’s real product (cut out, on a plain canvas) goes in; the AI builds the
    * whole listing image around it and may complete gaps. The caller checks that the product did not change.
    */
-  async listingVisual(input, prompt, size, ctx) {
+  async listingVisual(input, refs, prompt, size, ctx) {
     // Muse Image defaults to high reasoning with web search, image search and shell all on. For a listing image that
     // only adds latency and can push the call past the route deadline, so keep them off.
-    const edit = async (sz: string) => {
+    const edit = async (sz: string, withRefs: boolean) => {
       const file = await toFile(Buffer.from(input.split(",")[1] ?? "", "base64"), "product.png", { type: "image/png" });
+      const extra = withRefs ? await Promise.all(refs.map((r, n) => toFile(Buffer.from(r.split(",")[1] ?? "", "base64"), `angle-${n + 1}.jpg`, { type: "image/jpeg" }))) : [];
       return withRetry(
         () => meta().images.edit({
-          model: MODELS.scene, image: file, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
+          model: MODELS.scene, image: extra.length ? [file, ...extra] : file, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
           reasoning_strength: "low",
           tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
         } as any, { signal: ctx.signal }),
         { deadline: ctx.deadline },
       ) as Promise<any>;
     };
+    // Extra angles are a bonus. If the API does not accept several images, quietly use the main one alone.
+    const go = async (sz: string) => {
+      if (!refs.length) return edit(sz, false);
+      try {
+        return await edit(sz, true);
+      } catch (e) {
+        if (toAppError(e).code === "bad_request") return edit(sz, false);
+        throw e;
+      }
+    };
     let res: any;
     try {
-      res = await edit(size);
+      res = await go(size);
     } catch (e) {
       // If this shape is not accepted, ask for a square. The route crops it to the wanted ratio.
-      if (size !== "1024x1024" && toAppError(e).code === "bad_request") res = await edit("1024x1024");
+      if (size !== "1024x1024" && toAppError(e).code === "bad_request") res = await go("1024x1024");
       else throw e;
     }
     const b64: string | undefined = res?.data?.[0]?.b64_json;

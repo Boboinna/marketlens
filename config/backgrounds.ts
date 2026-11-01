@@ -5,6 +5,8 @@ const bg = (id: string, label: string, group: string, prompt: string): Backgroun
   ({ id, label, group, prompt, thumb: `/thumbnails/backgrounds/${id}.jpg` });
 
 export const BACKGROUNDS: Background[] = [
+  // Auto: the AI picks a setting that fits the product. The real prompt is built per style in scene-prompt.ts.
+  bg("auto", "Auto: match my product", "Auto", "A setting that naturally fits this kind of product."),
   bg("white-studio", "White studio", "Studio", "A seamless bright white studio backdrop with a soft floor reflection."),
   bg("grey-studio", "Grey seamless", "Studio", "A seamless light grey studio backdrop with a gentle floor reflection."),
   bg("soft-gradient", "Soft gradient", "Studio", "A smooth muted blue-lavender gradient backdrop with a matte tabletop."),
@@ -20,6 +22,6 @@ export const BACKGROUNDS: Background[] = [
 ];
 
 export const BG_IDS = BACKGROUNDS.map((b) => b.id) as [string, ...string[]];
-export const DEFAULT_BG = "warm-wood";
+export const DEFAULT_BG = "auto";
 export const bgById = (id: string) => BACKGROUNDS.find((b) => b.id === id) ?? BACKGROUNDS[0];
 export const BG_GROUPS = [...new Set(BACKGROUNDS.map((b) => b.group))];

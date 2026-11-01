@@ -5,3 +5,8 @@ export function parseDims(text: string): { nums: number[]; unit: "cm" | "mm" | "
   const unit = /\b(in|inch|inches)\b|"/i.test(text) ? "in" : /\bmm\b/i.test(text) ? "mm" : "cm";
   return { nums, unit };
 }
+
+/** Real measurements only: numbers with a length unit (cm, mm, in). "UK size 8" or "750 ml" are not lengths and never become arrows. */
+export function lengthDims(text: string) {
+  return /\b(cm|mm|in|inch|inches)\b|"/i.test(text) ? parseDims(text) : null;
+}

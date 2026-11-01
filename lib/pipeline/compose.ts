@@ -44,7 +44,8 @@ export function layoutFor(style: StyleId, ratio: Ratio) {
     lifestyle: { cx: 0.5, cy: 0.54, maxW: 0.56, maxH: 0.56 },
     infographic: { cx: 0.5, cy: 0.56, maxW: 0.46, maxH: 0.46 },
     size: { cx: 0.5, cy: 0.52, maxW: 0.44, maxH: 0.44 },
-    detail: { cx: 0.5, cy: 0.5, maxW: 1, maxH: 1 },
+    social: { cx: 0.5, cy: 0.6, maxW: 0.62, maxH: 0.56 },
+    ghost: { cx: 0.5, cy: 0.5, maxW: 0.8, maxH: 0.8 },
   } as const;
   return { W, H, ...table[style] };
 }
@@ -64,17 +65,6 @@ export async function placeOnCanvas(cut: Cut, style: StyleId, ratio: Ratio) {
     .composite([{ input: placed, left, top }]).png().toBuffer();
   const alpha = await sharp(placed).extractChannel("alpha").png().toBuffer();
   return { base, place: { left, top, pw, ph } as Place, alpha };
-}
-
-/** Detail close-up input: a tight crop of the seller’s own photo. The AI sharpens it and completes any edges. */
-export async function detailCrop(original: string, cut: Cut, ratio: Ratio) {
-  const { w: W, h: H } = RATIOS[ratio];
-  const { x1, y1 } = cut.box, w = cut.frame.w, h = cut.frame.h;
-  const padX = Math.round(cut.w * 0.06), padY = Math.round(cut.h * 0.06);
-  const left = Math.max(0, x1 - padX), top = Math.max(0, y1 - padY);
-  return sharp(buf(original)).rotate()
-    .extract({ left, top, width: Math.min(w - left, cut.w + 2 * padX), height: Math.min(h - top, cut.h + 2 * padY) })
-    .resize(W, H, { fit: "cover", position: "centre" }).removeAlpha().png().toBuffer();
 }
 
 /** The AI image comes back in the shape the model chose. Bring it to exactly the size we asked for. */

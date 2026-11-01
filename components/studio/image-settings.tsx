@@ -5,7 +5,7 @@ import { StylePicker } from "./style-picker";
 
 interface Props {
   value: VisualSettings; onChange: (p: Partial<VisualSettings>) => void;
-  hasSize: boolean; hasDetails: boolean; // the Size chart and Infographic need something to write
+  hasSize: boolean; hasDetails: boolean; hasTitle: boolean; // some styles need something to measure or write
 }
 
 const pill = (on: boolean) =>
@@ -14,11 +14,12 @@ const pill = (on: boolean) =>
 /** Ideas the seller can tap to add to their own scene notes. */
 const IDEAS = ["Product larger in the frame", "Soft window light", "Bright, clean and minimal", "Small green plant at the edge"];
 
-/** Style, background, shape and the seller's own scene notes, all visible. Every image is made as an Amazon listing image. */
-export function ImageSettings({ value, onChange, hasSize, hasDetails }: Props) {
+/** Style, background, aspect ratio and the seller's own scene notes, all visible. */
+export function ImageSettings({ value, onChange, hasSize, hasDetails, hasTitle }: Props) {
   const blocked = (id: StyleId) =>
-    id === "size" && !hasSize ? "add a size with numbers above, such as 34 x 30 cm."
-    : id === "infographic" && !hasDetails ? "confirm at least one detail above."
+    id === "size" && !hasSize ? "measurements with cm or in above, such as 34 x 24 cm"
+    : id === "infographic" && !hasDetails ? "at least one confirmed detail above"
+    : id === "social" && !hasTitle ? "what the product is, above"
     : null;
   const addIdea = (t: string) => {
     if (value.notes.toLowerCase().includes(t.toLowerCase())) return;
@@ -38,7 +39,7 @@ export function ImageSettings({ value, onChange, hasSize, hasDetails }: Props) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm text-mu">Shape</p>
+        <p className="mb-2 text-sm text-mu">Aspect ratio</p>
         <div role="group" aria-label="Aspect ratio" className="grid grid-cols-3 gap-2">
           {RATIO_IDS.map((r) => (
             <button key={r} type="button" aria-pressed={value.ratio === r} onClick={() => onChange({ ratio: r })} className={pill(value.ratio === r)}>

@@ -1,10 +1,11 @@
 import type { Fact } from "../truthlock/schema";
+import { lengthDims } from "../pipeline/dims";
 import { approvedFacts } from "./../truthlock/status";
 
-/** The seller's size text, when it has numbers a size chart can draw. */
+/** The seller's size text, only when it holds real measurements (numbers with cm, mm or in). A clothing size such as "UK size 8" does not count. */
 export function sizeText(facts: Fact[]): string | null {
   const v = facts.find((f) => f.key === "size")?.value.trim() ?? "";
-  return /\d/.test(v) ? v : null;
+  return lengthDims(v) ? v : null;
 }
 
 /** Up to three approved details for the infographic. Facts the seller has not approved never appear. */

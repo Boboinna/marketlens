@@ -66,7 +66,7 @@ export default function ResultPage() {
     const id = progress.start(st.made ? "Making a new visual…" : "Making your visual…");
     try {
       const out = await api.visual({
-        ...st.vo, original: st.photo.dataUrl, mask: st.match.maskPng, runId: st.runId, lang: st.lang,
+        ...st.vo, original: st.photo.dataUrl, extras: st.extras.map((p) => p.dataUrl), mask: st.match.maskPng, runId: st.runId, lang: st.lang,
         title: productTitle(st.facts), details: infographicDetails(st.facts), size: sizeText(st.facts),
       });
       const v: Visual = { id: crypto.randomUUID(), image: out.image, fidelity: out.fidelity, ...st.vo };
@@ -96,7 +96,7 @@ export default function ResultPage() {
   const visualsLeft = Math.max(0, VISUALS_PER_PRODUCT - made);
   const listingLeft = Math.max(0, MAX_LISTING_RUNS - listingRuns);
   const stale = !!listings && listingFor !== factsKey(facts);
-  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0;
+  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0, hasTitle = !!productTitle(facts);
   const title = productTitle(facts);
   const posts = current ? channelTexts(current, lang) : null;
   const upd = (p: Partial<Listing>) => listings && set({ listings: { ...listings, [lang]: { ...listings[lang], ...p } } });
@@ -189,7 +189,7 @@ export default function ResultPage() {
 
         {segState === "done" && (
           <RegenBar
-            value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails}
+            value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails} hasTitle={hasTitle}
             left={visualsLeft} total={VISUALS_PER_PRODUCT} busy={busy} canMake={!busy && visualsLeft > 0} onMake={() => void makeVisual()}
           />
         )}

@@ -33,34 +33,41 @@ export default function UploadPage() {
   useEffect(() => { loadDraft().then((d) => d?.analysis && setDraft(d)); setMine(loadMyTemplates()); }, []);
   const tpl = useMemo(() => (mode === "template" ? [...TEMPLATES, ...mine].find((t) => t.id === tplId) : undefined), [mode, tplId, mine]);
 
-  const handle = useCallback(async (file: File) => {
+  // Up to three photos. Only the first is needed. Files are resized when the seller continues, so the main photo keeps full quality.
+  const [files, setFiles] = useState<File[]>([]);
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
+
+  const read = useCallback(async () => {
+    if (!files.length) return;
     setBusy(true);
-    const id = progress.start("Reading your photo…");
+    const id = progress.start(files.length > 1 ? "Reading your photos…" : "Reading your photo…");
     try {
-      const photo = await resizeImage(file);
+      const [photo, ...extras] = await Promise.all(files.map((f, i) => resizeImage(f, { extra: i > 0 })));
       reset();
-      set({ photo });
-      const r = await api.analyze(photo.dataUrl);
+      set({ photo, extras });
+      const r = await api.analyze([photo.dataUrl, ...extras.map((p) => p.dataUrl)]);
       // A template only presets settings and adds blank questions. The photo is always read first.
       set({
         runId: r.runId, analysis: r.analysis, quota: r.quota,
         facts: tpl ? addAsked(r.facts, tpl.ask) : r.facts,
         ...(tpl ? { vo: { ...tpl.visual, notes: "" }, wording: tpl.tone } : {}),
       });
-      progress.ok(id, "Photo read", "Check the details next.");
+      progress.ok(id, files.length > 1 ? "Photos read" : "Photo read", "Check the details next.");
       router.push("/studio/details");
     } catch (e) {
-      progress.fail(id, e, () => handle(file));
+      progress.fail(id, e, () => void read());
       api.quota().then((q) => set({ quota: q.quota })).catch(() => {});
     } finally {
       setBusy(false);
     }
-  }, [reset, set, router, tpl]);
+  }, [files, reset, set, router, tpl]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-    accept: { "image/*": [] }, maxFiles: 1, noClick: true, disabled: busy || exhausted,
-    onDrop: (f) => f[0] && handle(f[0]),
+    accept: { "image/*": [] }, multiple: true, noClick: true, disabled: busy || exhausted,
+    onDrop: (f) => setFiles((cur) => [...cur, ...f].slice(0, 3)),
   });
+  const labels = ["Main photo", "Back or side", "Another angle"];
 
   const opt = (m: Mode, title: string, sub: string) => (
     <button
@@ -71,8 +78,8 @@ export default function UploadPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Start with one product photo</h1>
-      <p className="mt-2 text-mu">We read what’s visible, ask you about the rest, then write the listing and make your images.</p>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add your product photos</h1>
+      <p className="mt-2 text-mu">One photo is enough. We read what’s visible, ask you about the rest, then write your listing in three languages and make your marketing images.</p>
 
       {draft && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-s1 p-4">
@@ -116,15 +123,30 @@ export default function UploadPage() {
       {exhausted ? (
         <div className="mt-6"><QuotaCard limit={quota!.limit} /></div>
       ) : (
-        <div
-          {...getRootProps()}
-          className={`mt-6 flex flex-col items-center gap-3 rounded-2xl border-[1.5px] border-dashed p-6 text-center sm:p-8 ${isDragActive ? "border-tx bg-s2" : "border-[#3a434e] bg-s1"}`}
-        >
+        <div {...getRootProps()} className={`mt-6 rounded-2xl border-[1.5px] border-dashed p-4 sm:p-6 ${isDragActive ? "border-tx bg-s2" : "border-[#3a434e] bg-s1"}`}>
           <input {...getInputProps()} />
           <h2 className="text-lg font-semibold">Photograph your product</h2>
-          <p className="text-sm text-mu">Whole product in frame, even light, plain background.</p>
-          <Button full disabled={busy || (mode === "template" && !tpl)} onClick={open}>{busy ? "Reading…" : "Choose photo"}</Button>
-          {mode === "template" && !tpl && <p className="text-xs text-mu">Choose a template first, or switch to Start from scratch.</p>}
+          <p className="mt-1 text-sm text-mu">Whole product in frame, even light, plain background. <b className="text-tx">Only the first photo is needed.</b> If you can, add the back or a side too: the AI uses every angle to understand and rebuild your product more accurately.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
+            {[0, 1, 2].map((i) => files[i] ? (
+              <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-line bg-s2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previews[i]} alt={labels[i]} className="size-full object-cover" />
+                <span className="absolute left-1.5 top-1.5 rounded-full border border-line bg-s1/90 px-2 text-[11px]">{labels[i]}</span>
+                <button type="button" aria-label={`Remove ${labels[i]}`} disabled={busy} onClick={() => setFiles((cur) => cur.filter((_, n) => n !== i))} className="absolute bottom-1.5 right-1.5 flex size-9 items-center justify-center rounded-full border border-line bg-s1/90 text-lg leading-none">×</button>
+              </div>
+            ) : (
+              <button key={i} type="button" disabled={busy || (i > files.length) || (mode === "template" && !tpl && i === 0)} onClick={open}
+                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[#3a434e] bg-s2 p-2 text-center text-[13px] text-mu hover:border-tx disabled:opacity-40">
+                <span className="text-xl text-tx">+</span>{labels[i]}{i > 0 && <span className="text-[11px]">optional</span>}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button full disabled={busy || files.length === 0 || (mode === "template" && !tpl)} onClick={() => void read()}>{busy ? "Reading…" : files.length > 1 ? `Read my product (${files.length} photos)` : "Read my product"}</Button>
+            {files.length === 0 && <Button full variant="ghost" disabled={busy || (mode === "template" && !tpl)} onClick={open}>Choose photo</Button>}
+          </div>
+          {mode === "template" && !tpl && <p className="mt-2 text-xs text-mu">Choose a template first, or switch to Start from scratch.</p>}
         </div>
       )}
       <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device.</p>

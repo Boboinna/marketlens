@@ -17,5 +17,5 @@ export const TEMPLATES: Template[] = [
   { id: "fashion", label: "Clothing and fashion", description: "Clean hero image, asks for material and care", visual: { style: "hero", bg: "grey-studio", ratio: "4:5" }, ask: ["Material", "Sizes available", "Care"], tone: "" },
   { id: "handmade", label: "Handmade goods", description: "Lifestyle image, asks who made it and how to care for it", visual: { style: "lifestyle", bg: "warm-wood", ratio: "4:5" }, ask: ["Material", "Made by", "Care"], tone: "friendly" },
   { id: "electronics", label: "Electronics", description: "Size chart image, asks for model and warranty", visual: { style: "size", bg: "white-studio", ratio: "1:1" }, ask: ["Model number", "Warranty", "What's in the box"], tone: "" },
-  { id: "books", label: "Books and prints", description: "Detail crop image, asks for author and edition", visual: { style: "detail", bg: "soft-gradient", ratio: "1:1" }, ask: ["Author", "Format", "Edition"], tone: "" },
+  { id: "books", label: "Books and prints", description: "Clean hero image, asks for author and edition", visual: { style: "hero", bg: "soft-gradient", ratio: "1:1" }, ask: ["Author", "Format", "Edition"], tone: "" },
 ];

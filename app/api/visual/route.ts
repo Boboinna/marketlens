@@ -4,19 +4,20 @@ import { BG_IDS } from "@/config/backgrounds";
 import { NOTES_MAX, RATIO_IDS, RATIOS, STYLE_IDS } from "@/config/image-styles";
 import { LANG_IDS } from "@/config/languages";
 import { AppError, toAppError } from "@/lib/meta/errors";
-import { cutOut, detailCrop, fitTo, placeOnCanvas, regionOf, type Place } from "@/lib/pipeline/compose";
-import { parseDims } from "@/lib/pipeline/dims";
+import { cutOut, fitTo, placeOnCanvas, regionOf } from "@/lib/pipeline/compose";
+import { lengthDims } from "@/lib/pipeline/dims";
 import { MIN_SIMILARITY, similarity } from "@/lib/pipeline/guard";
 import { buildListingPrompt } from "@/lib/pipeline/scene-prompt";
 import { metaProvider } from "@/lib/providers/meta";
 import { assertCanMakeVisual, commitVisual, summary } from "@/lib/server/quota";
 import { respond } from "@/lib/server/route";
 export const runtime = "nodejs";
-export const maxDuration = 60; // raise only after confirming Fluid compute is on
+export const maxDuration = 60; // raise only after turning Fluid compute is on
 
 const D = z.string().startsWith("data:image/");
 const Body = z.object({
   original: D, mask: D, runId: z.string().max(40),
+  extras: z.array(D).max(2).default([]), // optional extra angles of the same product
   style: z.enum(STYLE_IDS), ratio: z.enum(RATIO_IDS), bg: z.enum(BG_IDS), notes: z.string().max(NOTES_MAX).optional(),
   lang: z.enum(LANG_IDS).default("en"),
   title: z.string().max(80).default(""),
@@ -38,32 +39,27 @@ export async function POST(req: Request) {
   return respond(async (ctx) => {
     const b = Body.parse(await req.json());
     // Check what the style needs, and the per-product cap, before any paid AI call.
-    if (b.style === "size" && !(b.size && parseDims(b.size))) throw new AppError("bad_request", "Add a size with numbers, such as 34 x 30 cm.", false, 400);
+    // A size chart needs real measurements (numbers with cm, mm or in). A clothing size like "UK size 8" is not one.
+    if (b.style === "size" && !(b.size && lengthDims(b.size))) throw new AppError("bad_request", "Add measurements with a unit, such as 34 x 24 cm.", false, 400);
+    if (b.style === "social" && !b.title.trim()) throw new AppError("bad_request", "Confirm what the product is first.", false, 400);
     if (b.style === "infographic" && !b.details.length) throw new AppError("bad_request", "Confirm at least one detail for the infographic.", false, 400);
     await assertCanMakeVisual(b.runId);
 
     const size = RATIOS[b.ratio].size;
     const cut = await cutOut(b.original, b.mask);
 
-    let input: Buffer, place: Place | null = null, alpha: Buffer | undefined;
-    if (b.style === "detail") {
-      input = await detailCrop(b.original, cut, b.ratio);
-    } else {
-      const p = await placeOnCanvas(cut, b.style, b.ratio);
-      input = p.base; place = p.place; alpha = p.alpha;
-    }
-
-    const promptInput = { style: b.style, bg: b.bg, notes: b.notes, lang: b.lang, title: b.title, details: b.details, size: b.size };
+    const { base: input, place, alpha } = await placeOnCanvas(cut, b.style, b.ratio);
+    const promptInput = { style: b.style, bg: b.bg, notes: b.notes, lang: b.lang, title: b.title, details: b.details, size: b.size, hasRefs: b.extras.length > 0 };
     let best: { img: Buffer; sim: number } | null = null;
     let lastErr: unknown = null;
 
     for (let attempt = 0; attempt < 2; attempt++) {
       if (attempt > 0 && ctx.deadline - Date.now() < RETRY_MIN_MS) break;
       try {
-        const raw = await metaProvider.listingVisual(asUrl(input), buildListingPrompt(promptInput, attempt > 0), size, ctx);
+        const raw = await metaProvider.listingVisual(asUrl(input), b.extras, buildListingPrompt(promptInput, attempt > 0), size, ctx);
         const out = await fitTo(fromUrl(raw), b.ratio);
         // Compare just the product's area before and after, so a new scene is fine but a changed product is not.
-        const sim = place && alpha ? await similarity(await regionOf(input, place), await regionOf(out, place), alpha) : await similarity(input, out);
+        const sim = await similarity(await regionOf(input, place), await regionOf(out, place), alpha);
         if (!best || sim > best.sim) best = { img: out, sim };
         if (sim >= MIN_SIMILARITY) break;
         console.warn(`[visual] attempt ${attempt + 1}: product match ${Math.round(sim * 100)}%, below ${Math.round(MIN_SIMILARITY * 100)}%`);

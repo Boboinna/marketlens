@@ -21,6 +21,7 @@ const BG_PREFIX =
   "with open space above it for the product to stand. No podium, no slab, no board, no plate, no objects, no people, no text, no logos. " +
   "Soft natural light, shallow depth of field, photorealistic. ";
 const BACKGROUNDS = {
+  auto: "A soft, airy, neutral backdrop: a bright seamless wall above a light matte surface, with a gentle hint of a softly blurred room.",
   "white-studio": "A seamless bright white studio sweep that curves from the floor into the wall, with a soft floor reflection.",
   "grey-studio": "A seamless light grey studio sweep with a gentle floor reflection and soft gradient lighting.",
   "soft-gradient": "A smooth muted blue-lavender gradient wall above a matte tabletop of the same soft tone.",
@@ -37,9 +38,10 @@ const BACKGROUNDS = {
 const STYLES = {
   hero: "Premium e-commerce hero shot of a hand-poured candle in a plain amber glass jar with a wooden lid, no labels or text on the jar, centered on a warm cream seamless backdrop, soft side light with a gentle rim light, long soft shadow, crisp edges, high detail, no text, no logos.",
   lifestyle: "Lifestyle photo of the same plain amber glass candle burning on a wooden bedside shelf in the evening, soft warm lamp glow, a folded knit blanket and a book softly blurred behind, calm and cozy, shallow depth of field, no text on the jar, no logos.",
-  infographic: "Product infographic on a warm sand background. Left half: a plain amber glass candle jar with a wooden lid on a soft terracotta panel. Right half: a vertical list of three rows, each with a small green check badge and large readable text: 'Hand-poured soy wax', '40-hour burn time', 'Cotton wick, lead-free'. Dark brown bold headline at the top: 'AMBER CANDLE'. Small pill badge at the bottom right: 'Details confirmed by the seller'. Clean modern layout, use exactly this text and no other text, no brand logos.",
+  infographic: "Bold product infographic on a clean light background, in the style of top Amazon infographics. A plain amber glass candle jar with a wooden lid, large and centered. Big bold dark-brown headline at the top: 'AMBER CANDLE'. Three large callouts around the candle, each with a big simple round icon, a thin leader line and large readable text: 'Hand-poured soy wax', '40-hour burn time', 'Cotton wick, lead-free'. High contrast, no reflections, use exactly this text and no other text, no brand logos.",
   size: "Product size guide on a light warm-grey background: front view of the plain amber candle jar with lid on the left, a vertical dimension arrow labeled '9 cm' and a horizontal arrow labeled '7 cm'. On the right a small clean table with three rows: 'Height 9 cm', 'Diameter 7 cm', 'Weight 220 g'. Dark brown title 'SIZE GUIDE'. Use exactly this text and no other text, no logos.",
-  detail: "Macro close-up of the top of a hand-poured candle: smooth cream wax surface, cotton wick, a few soft wax ripples, the amber glass rim in soft focus, warm side light, shallow depth of field. A small rounded label at the bottom left reading 'Hand-poured soy wax'. No other text, no logos.",
+  social: "Modern social media ad for a plain amber glass candle with a wooden lid: bold warm terracotta backdrop, the candle large and glowing in soft light on the right, a big stylish white headline on the left reading 'Amber candle'. Use exactly this text and no other text, no prices, no logos.",
+  ghost: "Ghost mannequin apparel photo of a plain cream chunky-knit sweater on a pure white seamless background, shown as if worn by an invisible body with natural 3D shape, the inside back of the neckline visible, soft shadow beneath. No mannequin, no person, no hanger, no text.",
 };
 
 const jobs = [

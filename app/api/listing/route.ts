@@ -4,6 +4,7 @@ import { metaProvider } from "@/lib/providers/meta";
 import { assertCanWriteListing, commitListingWrite, summary } from "@/lib/server/quota";
 import { respond } from "@/lib/server/route";
 import type { VerifiedListings } from "@/lib/truthlock/schema";
+import { capitalizeBrand } from "@/lib/pipeline/brand";
 import { approvedFacts } from "@/lib/truthlock/status";
 export const runtime = "nodejs";
 export const maxDuration = 60; // raise only after confirming Fluid compute is on
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
     }
     await commitListingWrite(runId);
     const { removed, ...listings } = out;
-    return { listings, removed, quota: await summary(runId) };
+    const brand = approved.find((f) => f.key === "brand")?.value;
+    return { listings: capitalizeBrand(listings, brand), removed, quota: await summary(runId) };
   });
 }

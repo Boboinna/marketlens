@@ -5,7 +5,7 @@ export const CORE_FIELDS: CoreField[] = [
   { key: "product_type", label: "What it is" },
   { key: "brand", label: "Brand or name" },
   { key: "color", label: "Color" },
-  { key: "size", label: "Size or amount", hint: "Dimensions, capacity, weight or clothing size" },
+  { key: "size", label: "Size or amount", hint: "Clothing size, or measurements like 34 x 24 cm" },
   { key: "condition", label: "Condition", options: ["New", "Used", "Refurbished"], sellerOnly: true },
 ];
 
