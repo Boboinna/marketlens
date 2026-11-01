@@ -5,7 +5,7 @@ const BADGE = {
   observed: "border-obs text-obs", confirmed: "border-con text-con",
   suggested: "border-sug text-sug", unknown: "border-line text-mu border-dashed",
 };
-const control = "mt-1 h-11 w-full rounded-xl border border-line bg-s2 px-3.5 text-[15px] outline-none";
+const control = "mt-1 h-12 w-full rounded-xl border border-line bg-s2 px-3.5 text-base outline-none sm:h-11 sm:text-[15px]";
 
 interface Props {
   n?: number; fact: Fact; hint?: string;
@@ -19,7 +19,7 @@ interface Props {
 export function FactRow({ n, fact, hint, onChange, onLabel, onRemove, onConfirm }: Props) {
   const id = `f-${fact.key}`;
   return (
-    <div className="grid grid-cols-[28px_1fr] items-start gap-x-4 gap-y-2 border-t border-line py-4 first:border-t-0 sm:grid-cols-[28px_1fr_auto]">
+    <div className="grid grid-cols-[28px_1fr] items-start gap-x-3 gap-y-2 sm:gap-x-4 border-t border-line py-4 first:border-t-0 sm:grid-cols-[28px_1fr_auto]">
       <span className={`mt-0.5 flex size-7 items-center justify-center rounded-full border-[1.5px] font-mono text-xs ${BADGE[fact.status]}`}>{n ?? ""}</span>
       <div className="min-w-0">
         {onLabel ? (

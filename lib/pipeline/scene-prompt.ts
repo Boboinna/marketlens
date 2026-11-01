@@ -1,37 +1,83 @@
 import { bgById } from "@/config/backgrounds";
 import type { StyleId } from "@/config/image-styles";
+import type { Lang } from "@/config/languages";
 import { cleanPrompt } from "../sanitize";
+import { parseDims } from "./dims";
 
-/** Fixed rules that always come last, so a seller's notes can never ask for products, people, text or logos. */
-export const SCENE_RULES = "Always: no products in the middle, no people, no text, no logos.";
+/** Every image this app makes is an Amazon-style listing image. This always comes first. */
+export const AMAZON_PREFIX =
+  "Create a professional Amazon product listing image: a commercial e-commerce photograph for a marketplace product page. " +
+  "The product is the clear hero of the picture, sharp, evenly lit, true to its real color, and large in the frame. " +
+  "The composition is clean and uncluttered, with realistic photographic quality, natural shadows and reflections, and no watermarks, borders or stock-photo logos.";
 
-const PREFIX =
-  "Empty product photography backdrop for e-commerce. The flat surface runs across the full width of the lower third of the frame, " +
-  "with open space above it for a product to stand. No podium, no slab, no board, no plate. Soft natural light from the upper left, " +
-  "shallow depth of field, photorealistic.";
-const CLEAR = "Leave the center and lower-center of the frame clear for the product. Match the camera angle: eye level, slightly above the surface.";
-const LIFESTYLE = "Style it as a lived-in setting: a few soft, out-of-focus props such as plants, ceramics or fabric only at the far left and right edges.";
-const CALM = "Keep the background calm and low-contrast, with the right third especially quiet, so a text panel stays readable on top.";
+/** How the AI must treat the input picture. The product is the seller’s real item and must not be redesigned. */
+const INPUT_RULES =
+  "The input picture is the seller’s real product, already cut out and placed on a plain flat grey canvas. The grey canvas is empty space, not part of the scene: replace all of it. " +
+  "Keep the product itself exactly as photographed: the same shape, color, proportions, texture, pattern, printed text and markings. " +
+  "If part of the product is cut off, blurry, or sits awkwardly, you may complete or tidy it so it looks whole and natural, but never change its design or add features or branding it does not have. " +
+  "Keep the product at the same position and about the same size as in the input picture, and build the rest of the picture around it.";
 
-/** The prompt for the background scene. The seller's real product is placed on it afterwards, never painted by the AI. */
-export function buildScenePrompt(i: { style: StyleId; bg: string; notes?: string }): string {
-  const notes = cleanPrompt(i.notes);
-  const parts = [PREFIX, bgById(i.bg).prompt];
-  if (i.style === "lifestyle") parts.push(LIFESTYLE);
-  if (i.style === "infographic" || i.style === "size") parts.push(CALM);
-  parts.push(CLEAR);
-  if (notes) parts.push(`The seller's scene notes: ${notes}.`);
-  return `${parts.join(" ")} ${SCENE_RULES}`;
+/** Added on a retry, after the product was changed too much. */
+export const STRICT_RETRY =
+  "IMPORTANT: your last attempt changed the product. This time leave the product pixels as they are in the input and only generate the surroundings, shadows and light.";
+
+const HEADING: Record<Lang, string> = { en: "SIZE GUIDE", fr: "GUIDE DES TAILLES", es: "GUÍA DE TALLAS" };
+const LANG_NAME: Record<Lang, string> = { en: "English", fr: "French", es: "Spanish" };
+
+export interface PromptInput {
+  style: StyleId; bg: string; notes?: string; lang: Lang;
+  title: string; details: { label: string; value: string }[]; size: string | null;
 }
 
-const KEEP =
-  "Keep the product exactly as it is: the same shape, color, proportions, texture, markings and every detail. " +
-  "Do not add, remove, redraw or restyle any part of it. Do not add objects, people, text or logos.";
+const q = (s: string) => `“${cleanPrompt(s, 120)}”`;
 
-/** The polish step: blend the product into the scene without changing the product itself. */
-export function buildPolishPrompt(style: StyleId): string {
-  if (style === "detail") {
-    return `Slightly sharpen and enhance this close-up product photo: cleaner light, better contrast, natural color. ${KEEP}`;
+function styleBlock(i: PromptInput): string {
+  const scene = bgById(i.bg).prompt;
+  const lang = LANG_NAME[i.lang] ?? "English";
+  switch (i.style) {
+    case "lifestyle":
+      return `Lifestyle listing image. Setting: ${scene} Show the product in a believable in-use setting that helps a buyer picture it in daily life. Add only a few soft, out-of-focus props at the edges; the product stays the sharp focal point and the largest object. No text.`;
+    case "infographic": {
+      const head = i.title ? q(i.title) : null;
+      const calls = i.details.map((d) => q(`${d.label}: ${d.value}`));
+      const all = [head, ...calls].filter(Boolean).join(", ");
+      return (
+        `Feature infographic listing image. Background: ${scene} Keep it calm and light so text stays readable. ` +
+        `Keep the product large and central, with callouts arranged around it. ` +
+        `${head ? `Place a bold headline at the top that reads ${head}. ` : ""}` +
+        `Add ${calls.length} ${calls.length === 1 ? "callout" : "callouts"}, each with a small simple icon, a thin leader line to the product and this text: ${calls.join(", ")}. ` +
+        `The ONLY words allowed anywhere on the image are these exact strings, spelled exactly as written, in ${lang}, not translated or reworded: ${all}. No other words, numbers or claims.`
+      );
+    }
+    case "size": {
+      const d = i.size ? parseDims(i.size) : null;
+      const heading = q(HEADING[i.lang] ?? HEADING.en);
+      const label = i.size ? q(i.size) : null;
+      const w = d?.nums[0] ? q(`${d.nums[0]} ${d.unit}`) : null;
+      const h = d?.nums[1] ? q(`${d.nums[1]} ${d.unit}`) : null;
+      const arrows = d
+        ? `Draw clean measurement lines with arrowheads${w ? `: a horizontal one across the product’s width labelled ${w}` : ""}${h ? ` and a vertical one along its height labelled ${h}` : ""}.`
+        : "Do not draw measurement lines.";
+      const all = [heading, label, w, h].filter(Boolean).join(", ");
+      return (
+        `Size chart listing image. Background: ${scene} Keep it calm and light. Keep the product central and fully visible. ${arrows} ` +
+        `Place a small heading that reads ${heading}${label ? ` and a size label that reads ${label}` : ""}. ` +
+        `The ONLY words and numbers allowed anywhere on the image are these exact strings, spelled exactly as written, in ${lang}: ${all}. No other text.`
+      );
+    }
+    case "detail":
+      return "Close-up detail listing image. The input is a tight crop of the real product. Produce a sharp, well-lit macro-style detail photo that shows its texture, material and construction, filling the frame. Soft shallow depth of field. Complete any soft or cut-off edges naturally. No text, no extra objects.";
+    default:
+      return `Main hero listing image. Background: ${scene} The product stands alone with a soft realistic contact shadow and subtle surface reflection. No props, no people, no text.`;
   }
-  return `This is a product photo where a real product was placed on a background. Make it look like one real photograph: blend the lighting, add a natural contact shadow and soft reflections on the surface, match the color temperature, and clean the product's cutout edges. Keep the scene and the composition. ${KEEP}`;
+}
+
+/** The full prompt for one image: Amazon framing, input rules, the style, then the seller’s own words. */
+export function buildListingPrompt(i: PromptInput, retry = false): string {
+  const notes = cleanPrompt(i.notes, 300);
+  const parts = [AMAZON_PREFIX, INPUT_RULES, styleBlock(i)];
+  if (notes) parts.push(`The seller’s own instructions for this image (follow them, unless they would change the product itself): ${notes}`);
+  parts.push("Output one single finished image, not a collage or split frame.");
+  if (retry) parts.push(STRICT_RETRY);
+  return parts.join(" ");
 }

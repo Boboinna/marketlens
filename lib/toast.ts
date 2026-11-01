@@ -4,7 +4,8 @@ import { toast } from "sonner";
 export const notify = {
   ok: (title: string, description?: string) => toast.success(title, { description }),
   info: (title: string, description?: string) => toast.info(title, { description }),
-  warn: (title: string, description?: string) => toast.warning(title, { description }),
+  warn: (title: string, description?: string, action?: { label: string; onClick: () => void }) =>
+    toast.warning(title, { description, action }),
 };
 
 /** One toast per action: it starts as "loading", then the same toast turns into success or error. */
@@ -24,9 +25,9 @@ const MESSAGES: Record<string, [string, string]> = {
   bad_request: ["Something about that request was off", "Reload the page and try again."],
   bad_output: ["The AI’s answer was unreadable", "Try again."],
   no_match: ["Couldn’t outline the product", "Try a clearer photo with a plain background."],
-  quota_exceeded: ["You’ve used your free products", "That’s the free limit for this demo."],
-  regen_limit: ["Limit reached for this product", "You’ve used every attempt for this product. Start a new product to make more."],
-  auth: ["The server can’t reach the AI", "Check MODEL_API_KEY in your environment."],
+  quota_exceeded: ["Free listings used up", "You’ve used all your free listings. Your saved ones are still available."],
+  regen_limit: ["No more visuals for this product", "Choose from the visuals you already made."],
+  auth: ["The server can’t reach the AI", "Check the API key in your environment."],
   billing: ["The AI account needs attention", "Check billing on the Meta Model API dashboard."],
 };
 const RETRY_CODES = new Set(["rate_limited", "busy", "timeout", "offline", "bad_output", "unknown"]);

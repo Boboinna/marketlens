@@ -8,7 +8,7 @@ export function StylePicker({ value, onChange, blocked }: Props) {
   const cur = IMAGE_STYLES.find((s) => s.id === value)!;
   return (
     <div>
-      <div role="radiogroup" aria-label="Image style" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <div role="radiogroup" aria-label="Image style" className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5">
         {IMAGE_STYLES.map((s) => {
           const why = blocked(s.id);
           return (
@@ -19,14 +19,14 @@ export function StylePicker({ value, onChange, blocked }: Props) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={s.thumb} alt="" loading="lazy" className="aspect-square w-full object-cover" />
-              <span className="block px-2.5 py-2 text-sm font-medium">{s.label}</span>
+              <span className="block truncate px-2.5 py-2 text-[13px] font-medium sm:text-sm">{s.label}</span>
             </button>
           );
         })}
       </div>
       <p className="mt-2.5 text-[13px] text-mu">
         {cur.description}
-        {cur.codeText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">Text drawn by code, always exact</span>}
+        {cur.hasText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">AI writes the text from your confirmed details</span>}
       </p>
       {IMAGE_STYLES.filter((s) => blocked(s.id)).map((s) => <p key={s.id} className="mt-1 text-xs text-mu">{s.label}: {blocked(s.id)}</p>)}
     </div>

@@ -7,22 +7,22 @@ import { StatusChip } from "@/components/ui/status-chip";
 import { FREE_GENERATIONS } from "@/config/limits";
 
 const STEPS = [
-  ["Add one photo", "Take it on your phone or upload it. We cut your product out of the background."],
-  ["Confirm the details", "MarketLens lists what it can see and asks you about the rest. Then you pick an image style and background."],
-  ["Get your listing and images", "Title, descriptions, highlights and tags in English, French and Spanish, plus studio images, all made from approved facts."],
+  ["Add one photo", "Take it on your phone or upload it. Start from scratch or from a template."],
+  ["Set up the details", "MarketLens lists what it can see and asks you about the rest. Then you pick the language, image style, shape and background, and add your own scene notes."],
+  ["Get your listing and images", "Title, descriptions, highlights and tags in English, French and Spanish, plus Amazon-style listing images made by AI, all from approved facts."],
 ];
 
 const USES = [
   ["Online stores", "Paste the title, description and tags into your product page and upload your images."],
-  ["Instagram, Facebook and WhatsApp", "Get ready-to-paste posts in the right image shape for every product."],
+  ["Instagram, Facebook and WhatsApp", "Get a ready-to-paste Marketplace post, Instagram caption and WhatsApp message for every product."],
   ["New brands", "Launch a catalog with consistent, honest listings without hiring a copywriter or photographer."],
 ];
 
 const FAQ = [
   ["Does it make things up?", "No. Details are marked observed, confirmed or unknown. Anything it can’t see stays blank until you fill it in. A second pass removes claims your facts don’t support, and a claim check flags the rest."],
-  ["Is my product redrawn?", "No. Your real product is cut out of your photo and kept intact. The AI builds the scene around it and blends light and shadow. If it changes your product too much, we fall back to the plain version. Text on infographics and size guides is drawn by code from your confirmed details, so it is always exact."],
-  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models, and we ask them not to store requests. Nothing is saved on a server. Download your images and text before you leave the page."],
-  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} finished products. There is no payment step yet.`],
+  ["Is my product redrawn?", "No. Your real product is cut out of your photo, and Meta’s Muse Image builds the whole listing image around it: the background, the light and the shadows. It may tidy empty or badly framed edges, but a check makes sure your product itself has not changed, and every image is made by AI. Infographic and size-chart text is written by the AI from your confirmed details only, so check the words before you post."],
+  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models, and we ask them not to store requests. Your finished listings are saved only in your browser, on this device, under My listings."],
+  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} finished listings. There is no payment step yet.`],
 ];
 
 export default function Landing() {
@@ -30,7 +30,10 @@ export default function Landing() {
     <main className="mx-auto max-w-6xl px-5 pb-20 md:px-12">
       <header className="flex items-center justify-between py-5">
         <Logo />
-        <Link href="/studio/upload" className={buttonClass("primary") + " !h-10 !px-4 !text-sm"}>Start free</Link>
+        <nav className="flex items-center gap-2">
+          <Link href="/listings" className={buttonClass("ghost") + " !h-10 !px-4 !text-sm"}>My listings</Link>
+          <Link href="/studio/upload" className={buttonClass("primary") + " !h-10 !px-4 !text-sm"}>Start free</Link>
+        </nav>
       </header>
 
       <section className="grid items-center gap-10 py-10 md:grid-cols-[1.05fr_1fr] md:py-16">
@@ -38,13 +41,13 @@ export default function Landing() {
           <StatusChip status="confirmed" label="For online store owners" />
           <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">From one product photo to a ready-to-post listing.</h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-mu">
-            MarketLens writes your title, descriptions and tags in English, French and Spanish and makes studio images, using only details it can see or you confirm. No invented claims.
+            MarketLens writes your title, descriptions and tags in English, French and Spanish and makes Amazon-style listing images with AI, using only details it can see or you confirm. No invented claims.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your first listing</Link>
             <a href="#how" className={buttonClass("ghost") + " !h-[52px]"}>How it works</a>
           </div>
-          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free products. No account needed.</p>
+          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
         </div>
         <div className="relative grid grid-cols-2 overflow-hidden rounded-2xl border border-line">
           <div className="flex aspect-[4/5] items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#303944,#141920_72%)]"><ProductArt width={190} /></div>

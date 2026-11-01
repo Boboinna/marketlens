@@ -36,38 +36,32 @@ export const metaProvider: Provider = {
     return parseModelJson(outputText(res), ModelAnalysis);
   },
 
-  async scene(prompt, size, ctx) {
-    // Muse Image defaults to high reasoning with web search, image search and shell all on. For a plain
-    // background that only adds latency and can push the call past the route deadline, so turn them off.
-    const generate = (sz: string) => withRetry(
-      () => meta().images.generate({
-        model: MODELS.scene, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
-        reasoning_strength: "low",
-        tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
-      } as any, { signal: ctx.signal }),
-      { deadline: ctx.deadline },
-    );
+  /**
+   * Image-to-image with Muse Image. The seller’s real product (cut out, on a plain canvas) goes in; the AI builds the
+   * whole listing image around it and may complete gaps. The caller checks that the product did not change.
+   */
+  async listingVisual(input, prompt, size, ctx) {
+    // Muse Image defaults to high reasoning with web search, image search and shell all on. For a listing image that
+    // only adds latency and can push the call past the route deadline, so keep them off.
+    const edit = async (sz: string) => {
+      const file = await toFile(Buffer.from(input.split(",")[1] ?? "", "base64"), "product.png", { type: "image/png" });
+      return withRetry(
+        () => meta().images.edit({
+          model: MODELS.scene, image: file, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
+          reasoning_strength: "low",
+          tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
+        } as any, { signal: ctx.signal }),
+        { deadline: ctx.deadline },
+      ) as Promise<any>;
+    };
     let res: any;
     try {
-      res = await generate(size);
+      res = await edit(size);
     } catch (e) {
-      // If this shape is not accepted, fall back to a square background. compose crops it to the wanted ratio.
-      if (size !== "1024x1024" && toAppError(e).code === "bad_request") res = await generate("1024x1024");
+      // If this shape is not accepted, ask for a square. The route crops it to the wanted ratio.
+      if (size !== "1024x1024" && toAppError(e).code === "bad_request") res = await edit("1024x1024");
       else throw e;
     }
-    const b64: string | undefined = res?.data?.[0]?.b64_json;
-    if (!b64) throw new AppError("bad_output", "No image came back.", true, 502);
-    return `data:${sniffMime(b64)};base64,${b64}`;
-  },
-
-  /** Image-to-image: the composite goes in, a better-blended version comes out. The caller checks the product did not change. */
-  async polish(image, prompt, size, ctx) {
-    const file = await toFile(Buffer.from(image.split(",")[1] ?? "", "base64"), "composite.png", { type: "image/png" });
-    const res: any = await meta().images.edit({
-      model: MODELS.scene, image: file, prompt, n: 1, size, response_format: "b64_json", output_format: "jpeg",
-      reasoning_strength: "low",
-      tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false },
-    } as any, { signal: ctx.signal });
     const b64: string | undefined = res?.data?.[0]?.b64_json;
     if (!b64) throw new AppError("bad_output", "No image came back.", true, 502);
     return `data:${sniffMime(b64)};base64,${b64}`;

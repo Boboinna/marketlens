@@ -13,10 +13,10 @@ const SPOT = "bg-[radial-gradient(circle_at_50%_38%,#303944,#141920_72%)]";
 /** The photo (or its cutout on a checkerboard), with optional numbered pins. */
 export function PhotoStage({ src, pins = [], checker = false, alt = "Your product photo" }: { src: string; pins?: Pin[]; checker?: boolean; alt?: string }) {
   return (
-    <div className={`flex items-center justify-center rounded-2xl border border-line p-4 ${checker ? CHECKER : SPOT}`}>
+    <div className={`flex items-center justify-center rounded-2xl border border-line p-3 sm:p-4 ${checker ? CHECKER : SPOT}`}>
       <div className="relative inline-block max-w-full">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className="block max-h-[56vh] w-auto max-w-full rounded-lg" />
+        <img src={src} alt={alt} className="block max-h-[28vh] sm:max-h-[40vh] md:max-h-[56vh] w-auto max-w-full rounded-lg" />
         {pins.map((p) => (
           <span
             key={p.n} style={{ left: `${p.x}%`, top: `${p.y}%` }}

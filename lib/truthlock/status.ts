@@ -42,6 +42,13 @@ export function toFacts(a: ModelAnalysis): Fact[] {
 /** "Confirm" on an AI-suggested detail: the seller vouches for it, so it can reach the listing. */
 export const confirmFact = (f: Fact): Fact => (f.value.trim() ? { ...f, status: "confirmed" } : f);
 
+/** Blank questions a template asks for. They stay blank (unknown) until the seller answers. */
+export function addAsked(facts: Fact[], asks: string[]): Fact[] {
+  const have = new Set(facts.map((f) => f.label.trim().toLowerCase()));
+  const extra = asks.filter((a) => a.trim() && !have.has(a.trim().toLowerCase())).map((a) => addCustomFact(a));
+  return [...facts, ...extra];
+}
+
 /** The seller always has the last word. Editing an observed fact makes it seller-confirmed; clearing it leaves it blank. */
 export function setSellerValue(f: Fact, value: string): Fact {
   const v = value.trim();
@@ -59,7 +66,6 @@ export function addCustomFact(label: string, value = ""): Fact {
 export const removeFact = (facts: Fact[], key: string) => facts.filter((f) => f.key !== key);
 export const dropBlankCustom = (facts: Fact[]) => facts.filter((f) => !(f.custom && !f.value.trim()));
 
-/** Only approved facts may ever reach a listing or an image. */
 export const isApproved = (f: Fact) =>
   (f.status === "observed" || f.status === "confirmed") && f.value.trim().length > 0;
 

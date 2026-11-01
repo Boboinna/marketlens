@@ -1,8 +1,8 @@
 import "server-only";
 import sharp from "sharp";
 
-/** Below this, the AI changed the product too much and the plain composite is used instead. */
-export const MIN_SIMILARITY = 0.8;
+/** Below this, the AI changed the product too much, so the attempt is retried (never replaced by a code-made image). */
+export const MIN_SIMILARITY = 0.75;
 
 const SIZE = 64;
 
