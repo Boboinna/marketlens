@@ -26,6 +26,12 @@ const RISKY: string[][] = [
   ["limited edition", "édition limitée", "edición limitada"],
   ["brand new", "neuf avec", "nuevo a estrenar"],
   ["made in", "fabriqué en", "fabricado en", "hecho en"],
+  ["true to size", "fits true", "taille normale", "talla normal"],
+  ["stretchy", "stretch", "extensible", "elástico", "elastico"],
+  ["fully lined", "lined", "doublé", "forrado"],
+  ["breathable", "respirant", "transpirable"],
+  ["new with tags", "neuf avec étiquette", "nuevo con etiqueta"],
+  ["oversized", "surdimensionné", "oversize"],
 ];
 
 export function checkClaims(text: string, facts: Fact[]): ClaimIssue[] {

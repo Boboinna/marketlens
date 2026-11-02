@@ -10,7 +10,7 @@ function QuotaPill() {
   const left = Math.max(0, q.limit - q.used);
   return (
     <span className={`rounded-full border px-3 py-1.5 text-xs ${left === 0 ? "border-unk/40 text-unk" : "border-line text-mu"}`}>
-      {left} of {q.limit} free left
+      {left} of {q.limit} free images left
     </span>
   );
 }

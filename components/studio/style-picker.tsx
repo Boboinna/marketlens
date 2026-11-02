@@ -16,7 +16,7 @@ export function StylePicker({ value, onChange, blocked, compact }: Props) {
       {!compact && (
         <p className="mt-2 text-[13px] text-mu">
           {cur.description}
-          {cur.hasText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">AI writes the text from your confirmed details</span>}
+          {cur.hasText && <span className="ml-1.5 font-mono text-[11px] uppercase tracking-wide text-con">You check the words before it’s made</span>}
         </p>
       )}
     </div>

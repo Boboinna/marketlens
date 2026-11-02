@@ -20,6 +20,7 @@ export const ModelSuggestion = z.object({ key: z.string(), label: z.string(), va
 
 export const ModelAnalysis = z.object({
   product_type: z.string(),
+  is_garment: z.boolean().default(true), // false when the photo is not clothing: the app says so, then still tries
   sam_phrases: z.array(z.string()).min(1).max(4),
   box: z.tuple([z.number(), z.number(), z.number(), z.number()]).nullable(), // 0-1000 grid
   attributes: z.array(ModelAttribute).min(1).max(12),
@@ -45,9 +46,10 @@ export interface Fact {
 export const ANALYSIS_JSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["product_type", "sam_phrases", "box", "attributes", "suggestions"],
+  required: ["product_type", "is_garment", "sam_phrases", "box", "attributes", "suggestions"],
   properties: {
     product_type: { type: "string" },
+    is_garment: { type: "boolean" },
     sam_phrases: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 4 },
     box: { type: ["array", "null"], items: { type: "number" }, minItems: 4, maxItems: 4 },
     suggestions: {

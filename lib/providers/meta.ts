@@ -9,17 +9,19 @@ import { decodeSam } from "../meta/sam-decode";
 import { AppError, toAppError } from "../meta/errors";
 import { parseModelJson, sniffMime } from "../meta/parse";
 import { maskToFrame } from "../pipeline/mask";
-import { buildListingsPrompt, buildVerifyPrompt } from "../pipeline/listing-prompt";
+import { buildListingsPrompt, buildTextCheckPrompt, buildVerifyPrompt } from "../pipeline/listing-prompt";
+import { z } from "zod";
 import { ANALYSIS_JSON_SCHEMA, LISTINGS_JSON_SCHEMA, Listings, ModelAnalysis, VERIFIED_JSON_SCHEMA, VerifiedListings } from "../truthlock/schema";
 import type { Ctx, Provider } from "./types";
 
-const ANALYZE_PROMPT = `You inspect product photos for an online store seller. The first photo is the main one; any other photos show the same product from another angle (for example the back). Combine what is visible across all photos, and place every point and box on the FIRST photo only. The product can be anything: clothing or cloth, a bottle or other item, packaged branded goods, and so on.
-Report only what is plainly visible, including text printed on the item or its label. If a detail cannot be seen, set visible=false and value=null. Never guess.
-Always return these attributes with these exact keys: product_type (what it is), brand (brand or name, only if printed or clearly visible), color, size (only if a size or amount is printed, such as weight or capacity), condition (always visible=false; the seller decides).
-Then add at most 4 other clearly visible details (a feature, a flavor printed on the label, a pattern), each with a short snake_case key and a plain label.
+const ANALYZE_PROMPT = `You inspect clothing photos for a fashion reseller. The first photo is the main one; any other photos show the same garment from another angle (for example the back). Combine what is visible across all photos, and place every point and box on the FIRST photo only.
+First decide is_garment: true if the main subject is a piece of clothing (a top, dress, bodysuit, trousers, jacket, skirt, knitwear, swimwear and so on, on a mannequin, a hanger, a person or flat), false for anything else.
+Report only what is plainly visible, including text printed on the item or a visible label. If a detail cannot be seen, set visible=false and value=null. Never guess.
+Always return these attributes with these exact keys: product_type (what garment it is, in plain words such as "smocked crop top"), size (visible=false unless a size is clearly printed on a visible label or tag), fabric (visible=false unless the fabric content is clearly printed on a visible label), fit (always visible=false; the seller decides), neckline (for example scoop, halter, square, V), length (for example cropped, mini, midi, maxi), color (include the main colors and any simple pattern), condition (always visible=false; the seller decides), brand (only if printed or clearly visible).
+Then add at most 4 other clearly visible details (a print, strap type, trim, closure, finish), each with a short snake_case key and a plain label.
 For every visible attribute give a short evidence phrase and point=[x,y] on a 0-1000 grid.
-Also return up to 3 "suggestions": details that are likely true for this kind of product but cannot be seen in the photo (for example machine washable, inner pocket, serving size). Each needs a snake_case key, a plain label, a short value, and a one-line reason. These are only hints for the seller to confirm; never put anything visible there, and return an empty list if nothing fits.
-Also return 1-3 short noun phrases for segmentation (most specific first) and box=[x1,y1,x2,y2] on a 0-1000 grid around the whole product.`;
+Also return up to 3 "suggestions": details that are likely true for this kind of garment but cannot be seen in the photo (for example machine washable, lined, stretchy). Each needs a snake_case key, a plain label, a short value, and a one-line reason. These are only hints for the seller to confirm; never put anything visible there, and return an empty list if nothing fits.
+Also return 1-3 short noun phrases for segmentation (most specific first, for example "crop top", "garment") and box=[x1,y1,x2,y2] on a 0-1000 grid around the whole garment.`;
 
 /** One Responses API call with retries that never run past the route deadline. */
 export async function respondCall(body: Record<string, unknown>, ctx: Ctx) {
@@ -37,15 +39,20 @@ export const metaProvider: Provider = {
   },
 
   /**
-   * Image-to-image with Muse Image. The seller’s real product (cut out, on a plain canvas) goes in; the AI builds the
-   * whole listing image around it and may complete gaps. The caller checks that the product did not change.
+   * Image-to-image with Muse Image. The seller's own photo goes in exactly as it is (no cut-out, no canvas) and the AI
+   * makes the whole image: it removes the mannequin, hands and hanger, keeps the garment's colors, print and fabric,
+   * and completes any gaps.
    */
-  async listingVisual(input, refs, prompt, size, ctx) {
+  async listingVisual(original, refs, prompt, size, ctx) {
     // Muse Image defaults to high reasoning with web search, image search and shell all on. For a listing image that
     // only adds latency and can push the call past the route deadline, so keep them off.
+    const toBuf = (u: string) => Buffer.from(u.split(",")[1] ?? "", "base64");
+    const mimeOf = (u: string) => /^data:(image\/[a-z+]+);/.exec(u)?.[1] ?? "image/jpeg";
+    const ext = (m: string) => (m === "image/png" ? "png" : m === "image/webp" ? "webp" : "jpg");
     const edit = async (sz: string, withRefs: boolean) => {
-      const file = await toFile(Buffer.from(input.split(",")[1] ?? "", "base64"), "product.png", { type: "image/png" });
-      const extra = withRefs ? await Promise.all(refs.map((r, n) => toFile(Buffer.from(r.split(",")[1] ?? "", "base64"), `angle-${n + 1}.jpg`, { type: "image/jpeg" }))) : [];
+      const om = mimeOf(original);
+      const file = await toFile(toBuf(original), `garment.${ext(om)}`, { type: om });
+      const extra = withRefs ? await Promise.all(refs.map((r, n) => { const m = mimeOf(r); return toFile(toBuf(r), `angle-${n + 1}.${ext(m)}`, { type: m }); })) : [];
       return withRetry(
         () => meta().images.edit({
           model: MODELS.scene, image: extra.length ? [file, ...extra] : file, prompt, n: 1, size: sz, response_format: "b64_json", output_format: "jpeg",
@@ -94,6 +101,16 @@ export const metaProvider: Provider = {
       text: { format: { type: "json_schema", name: "verified_listings", schema: VERIFIED_JSON_SCHEMA, strict: true } },
     }, ctx);
     return parseModelJson(outputText(res), VerifiedListings);
+  },
+
+  async checkText(lines, ctx) {
+    const res = await respondCall({
+      model: MODELS.textCheck, reasoning: { effort: EFFORT.textCheck }, store: false, max_output_tokens: 800,
+      input: [{ role: "user", content: [{ type: "input_text", text: buildTextCheckPrompt(lines) }] }],
+      text: { format: { type: "json_schema", name: "checked_lines", schema: { type: "object", additionalProperties: false, required: ["lines"], properties: { lines: { type: "array", items: { type: "string" } } } }, strict: true } },
+    }, ctx);
+    const out = parseModelJson(outputText(res), z.object({ lines: z.array(z.string()) }));
+    return out.lines.length === lines.length ? out.lines : lines; // never change how many lines there are
   },
 
   async segment(image, phrase, ctx) {

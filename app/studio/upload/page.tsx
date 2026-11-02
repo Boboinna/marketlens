@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { BgThumb } from "@/components/studio/background-picker";
 import { bgById } from "@/config/backgrounds";
 import { RATIOS, styleById } from "@/config/image-styles";
+import { normalizeVisual } from "@/config/visual";
 import { TEMPLATES, type Template } from "@/config/templates";
 import { useQuota } from "@/hooks/use-quota";
 import { api } from "@/lib/client/api";
-import { clearDraft, loadDraft, resumePath, type Draft } from "@/lib/client/drafts";
+import { clearDraft, isUnused, loadDraft, resumePath, type Draft } from "@/lib/client/drafts";
 import { resizeImage } from "@/lib/client/image-resize";
 import { loadMyTemplates } from "@/lib/client/templates";
-import { progress } from "@/lib/toast";
+import { notify, progress } from "@/lib/toast";
 import { addAsked } from "@/lib/truthlock/status";
 import { useStudio } from "@/store/studio";
 
@@ -44,6 +45,8 @@ export default function UploadPage() {
     const id = progress.start(files.length > 1 ? "Reading your photos…" : "Reading your photo…");
     try {
       const [photo, ...extras] = await Promise.all(files.map((f, i) => resizeImage(f, { extra: i > 0 })));
+      // A new garment starts here. Any older draft is thrown away: if it never had an image generated, it cost nothing and is not kept.
+      await clearDraft();
       reset();
       set({ photo, extras });
       const r = await api.analyze([photo.dataUrl, ...extras.map((p) => p.dataUrl)]);
@@ -51,8 +54,9 @@ export default function UploadPage() {
       set({
         runId: r.runId, analysis: r.analysis, quota: r.quota,
         facts: tpl ? addAsked(r.facts, tpl.ask) : r.facts,
-        ...(tpl ? { vo: { ...tpl.visual, notes: "" }, wording: tpl.tone } : {}),
+        ...(tpl ? { vo: normalizeVisual(tpl.visual), wording: tpl.tone } : {}),
       });
+      if (r.analysis.is_garment === false) notify.info("MarketLens is built for clothing", "This doesn’t look like a garment. We’ll still try, but the details and images work best for clothes.");
       progress.ok(id, files.length > 1 ? "Photos read" : "Photo read", "Check the details next.");
       router.push("/studio/details");
     } catch (e) {
@@ -78,12 +82,12 @@ export default function UploadPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add your product photos</h1>
-      <p className="mt-2 text-mu">One photo is enough. We read what’s visible, ask you about the rest, then write your listing in three languages and make your marketing images.</p>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add your garment photos</h1>
+      <p className="mt-2 text-mu">One photo is enough. We read what’s visible, ask you for size, fabric and the rest, then write your listing in three languages and make fashion-ready images.</p>
 
       {draft && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-s1 p-4">
-          <p className="flex-1 text-sm">You have an unfinished product.</p>
+          <p className="flex-1 text-sm">You have an unfinished garment.{isUnused(draft) && <span className="block text-xs text-mu">No image was made yet, so no free image was used.</span>}</p>
           <Button variant="ghost" className="!h-10" onClick={() => { void clearDraft(); setDraft(undefined); }}>Discard</Button>
           <Button className="!h-10" onClick={() => { hydrate(draft); router.push(resumePath(draft)); }}>Continue</Button>
         </div>
@@ -125,8 +129,8 @@ export default function UploadPage() {
       ) : (
         <div {...getRootProps()} className={`mt-6 rounded-2xl border-[1.5px] border-dashed p-4 sm:p-6 ${isDragActive ? "border-tx bg-s2" : "border-[#3a434e] bg-s1"}`}>
           <input {...getInputProps()} />
-          <h2 className="text-lg font-semibold">Photograph your product</h2>
-          <p className="mt-1 text-sm text-mu">Whole product in frame, even light, plain background. <b className="text-tx">Only the first photo is needed.</b> If you can, add the back or a side too: the AI uses every angle to understand and rebuild your product more accurately.</p>
+          <h2 className="text-lg font-semibold">Photograph your garment</h2>
+          <p className="mt-1 text-sm text-mu">Whole garment in frame, even light. A mannequin, hanger or messy background is fine: the AI removes them. <b className="text-tx">Only the first photo is needed.</b> If you can, add the back or a side too, so the AI sees every angle.</p>
           <div className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
             {[0, 1, 2].map((i) => files[i] ? (
               <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-line bg-s2">
@@ -143,13 +147,13 @@ export default function UploadPage() {
             ))}
           </div>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button full disabled={busy || files.length === 0 || (mode === "template" && !tpl)} onClick={() => void read()}>{busy ? "Reading…" : files.length > 1 ? `Read my product (${files.length} photos)` : "Read my product"}</Button>
+            <Button full disabled={busy || files.length === 0 || (mode === "template" && !tpl)} onClick={() => void read()}>{busy ? "Reading…" : files.length > 1 ? `Read my garment (${files.length} photos)` : "Read my garment"}</Button>
             {files.length === 0 && <Button full variant="ghost" disabled={busy || (mode === "template" && !tpl)} onClick={open}>Choose photo</Button>}
           </div>
           {mode === "template" && !tpl && <p className="mt-2 text-xs text-mu">Choose a template first, or switch to Start from scratch.</p>}
         </div>
       )}
-      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device.</p>
+      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device. Reading a photo is free: a free image is used only when an image starts being made.</p>
     </div>
   );
 }

@@ -77,7 +77,7 @@ export default function MyListings() {
       ) : items.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-[#3a434e] p-8 text-center sm:p-12">
           <p className="text-lg font-semibold">No listings yet</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-mu">Add a product photo and get marketing images plus a listing in English, French and Spanish.</p>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-mu">Add a garment photo and get fashion-ready images plus a listing in English, French and Spanish.</p>
           <Link href="/studio/upload" className={`${buttonClass("primary")} mt-5`}>Create your listing</Link>
         </div>
       ) : (

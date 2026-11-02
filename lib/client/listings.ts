@@ -2,7 +2,7 @@ import { createStore, del, entries, get, set, type UseStore } from "idb-keyval";
 import type { Lang } from "@/config/languages";
 import type { Fact, Listing } from "../truthlock/schema";
 
-export interface SavedVisual { id: string; blob: Blob; style: string; ratio: string; fidelity: number }
+export interface SavedVisual { id: string; blob: Blob; style: string; ratio: string; match?: number | null }
 
 export interface SavedListing {
   id: string; createdAt: number; lang: Lang; wording: string;

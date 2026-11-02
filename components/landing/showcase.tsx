@@ -1,45 +1,47 @@
+import { SafeImg } from "@/components/landing/safe-img";
 import { Thumb } from "@/components/studio/image-select";
 import { IMAGE_STYLES } from "@/config/image-styles";
 
+/** Examples made with the new pipeline from one real seller photo: the original goes in as it is, the AI does the rest. */
 const TILES = [
-  { src: "/showcase/halter-hero.jpg", title: "Amazon-style hero shot", note: "Clean, bright, product first." },
-  { src: "/showcase/halter-lifestyle.jpg", title: "Lifestyle scene", note: "Set in a place that fits the product." },
-  { src: "/showcase/smocked-lifestyle.jpg", title: "Marketing image", note: "Styled for a post or a product page." },
+  { id: "main", title: "Main image", note: "Pure white. Marketplace-ready." },
+  { id: "flatlay", title: "Flat lay", note: "Styled on a surface, shot from above." },
+  { id: "ghost", title: "Ghost mannequin", note: "Looks worn, no body in sight." },
+  { id: "lifestyle", title: "Lifestyle", note: "Mirror corner, bedroom or street." },
+  { id: "infographic", title: "Infographic", note: "A bold title and 3 big callouts." },
+  { id: "social", title: "Social ad", note: "A real scene, the garment front and centre." },
 ];
 
-/** "See it in action": a real before and after, three real outputs, and the image styles on offer. */
+/** "See it in action": a real before and after, six styles from the same photo, and the full style list. */
 export function Showcase() {
   return (
     <section aria-labelledby="see" className="mt-14 border-t border-line pt-10">
       <h2 id="see" className="text-2xl font-semibold tracking-tight">See it in action</h2>
-      <p className="mt-2 max-w-xl text-sm text-mu">One ordinary photo of a real product becomes marketing images you can post. The product stays yours. The scene, the light and the layout are made around it.</p>
+      <p className="mt-2 max-w-xl text-sm text-mu">A phone photo on a mannequin becomes the kind of image you see on top fashion shops and resale apps. The garment stays yours: same colours, same print, same fabric. The mannequin, the hands and the messy room are gone.</p>
 
       <div className="mt-6 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
         <figure className="overflow-hidden rounded-2xl border border-line bg-s1">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/showcase/smocked-before.jpg" alt="Seller’s original photo of a striped smocked crop top on a mannequin" loading="lazy" className="aspect-square w-full object-cover" />
-          <figcaption className="p-3.5 text-sm"><b>Your photo</b><span className="block text-xs text-mu">Taken on a phone, plain background.</span></figcaption>
+          <SafeImg src="/showcase/bodysuit-before.jpg" alt="Seller’s original photo of a silver glitter bodysuit on a mannequin" label="Your photo" className="aspect-[4/5] w-full object-cover" />
+          <figcaption className="p-3.5 text-sm"><b>Your photo</b><span className="block text-xs text-mu">Taken on a phone, on a mannequin.</span></figcaption>
         </figure>
-        <span aria-hidden className="mx-auto text-2xl text-mu md:rotate-0 rotate-90">→</span>
+        <span aria-hidden className="mx-auto rotate-90 text-2xl text-mu md:rotate-0">→</span>
         <figure className="overflow-hidden rounded-2xl border border-line bg-s1">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/showcase/smocked-lifestyle.jpg" alt="AI-made lifestyle image of the same crop top on a white shelf with dried grass" loading="lazy" className="aspect-square w-full object-cover object-top" />
-          <figcaption className="p-3.5 text-sm"><b>Your marketing image</b><span className="block text-xs text-mu">Made by AI around your real product.</span></figcaption>
+          <SafeImg src="/showcase/bodysuit-flatlay.jpg" alt="AI-made flat lay of the same bodysuit on a light oak table" label="Flat lay" className="aspect-[4/5] w-full object-cover" />
+          <figcaption className="p-3.5 text-sm"><b>Your flat lay</b><span className="block text-xs text-mu">Made by AI from the same photo.</span></figcaption>
         </figure>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
         {TILES.map((t) => (
-          <figure key={t.src} className="overflow-hidden rounded-2xl border border-line bg-s1">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={t.src} alt={t.title} loading="lazy" className="aspect-[4/5] w-full object-cover object-top" />
-            <figcaption className="p-3.5"><b className="block text-sm">{t.title}</b><span className="mt-0.5 block text-xs text-mu">{t.note}</span></figcaption>
+          <figure key={t.id} className="overflow-hidden rounded-2xl border border-line bg-s1">
+            <SafeImg src={`/showcase/${t.id}.jpg`} alt={`${t.title} example`} label={t.title} className="aspect-[4/5] w-full object-cover" />
+            <figcaption className="p-3"><b className="block text-sm">{t.title}</b><span className="mt-0.5 block text-xs text-mu">{t.note}</span></figcaption>
           </figure>
         ))}
       </div>
-      <p className="mt-3 text-xs text-mu">Example outputs made with MarketLens from sellers’ own photos, using Meta’s Muse Image.</p>
+      <p className="mt-3 text-xs text-mu">All six made from the one photo above, using Meta’s Muse Image.</p>
 
-      <h3 className="mt-10 text-lg font-semibold">Six image styles for every channel</h3>
+      <h3 className="mt-10 text-lg font-semibold">Seven image styles built for clothes</h3>
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         {IMAGE_STYLES.map((s) => (
           <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-s1 p-3.5">

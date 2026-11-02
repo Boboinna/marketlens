@@ -13,7 +13,7 @@ import { copyText } from "@/lib/client/clipboard";
 import { downloadBlob, slug } from "@/lib/client/download";
 import { deleteListing, getListing, saveListing, type SavedListing, type SavedVisual } from "@/lib/client/listings";
 import { notify } from "@/lib/toast";
-import { approvedFacts, pendingCount } from "@/lib/truthlock/status";
+import { approvedFacts } from "@/lib/truthlock/status";
 
 function Block({ label, text, onCopy, mono, children }: { label: string; text?: string; onCopy: () => void; mono?: boolean; children?: React.ReactNode }) {
   return (
@@ -65,7 +65,7 @@ export default function FinalListing() {
     const next = { ...r, visuals: r.visuals.filter((x) => x.id !== v.id) };
     await saveListing(next);
     setR(next);
-    notify.ok("Visual deleted");
+    notify.ok("Image deleted");
   };
 
   if (r === undefined) return <div className="h-96 animate-pulse rounded-2xl bg-s1" aria-busy="true" />;
@@ -82,7 +82,6 @@ export default function FinalListing() {
   const listing = r.listings[lang] ?? r.listings[r.lang]!;
   const ch = channelTexts(listing, r.listings[lang] ? lang : r.lang);
   const verified = approvedFacts(r.facts);
-  const open = pendingCount(r.facts);
   const name = slug(listing.title);
 
   return (
@@ -103,7 +102,7 @@ export default function FinalListing() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Tile blob={r.original} label="Original photo" name={`${name}-original.jpg`} />
           {r.visuals.map((v, i) => (
-            <Tile key={v.id} blob={v.blob} label={`Visual ${i + 1} · ${v.ratio} · ${styleById(v.style).label}`} name={`${name}-visual-${i + 1}.jpg`} onDelete={() => void deleteVisual(v)} />
+            <Tile key={v.id} blob={v.blob} label={`Image ${i + 1} · ${v.ratio} · ${styleById(v.style).label}`} name={`${name}-image-${i + 1}.jpg`} onDelete={() => void deleteVisual(v)} />
           ))}
         </div>
       </section>
@@ -136,7 +135,6 @@ export default function FinalListing() {
               </li>
             ))}
           </ul>
-          {open > 0 && <p className="mt-3 text-sm text-unk">{open} details were left blank.</p>}
         </section>
       </div>
 
@@ -144,7 +142,7 @@ export default function FinalListing() {
         <Link href="/studio/upload" className={buttonClass("primary")}>New listing</Link>
         <Link href="/listings" className={buttonClass("ghost")}>My listings</Link>
         <Button variant="ghost" className="sm:ml-auto" onClick={async () => {
-          if (!confirm("Delete this listing and all its visuals? This can’t be undone.")) return;
+          if (!confirm("Delete this listing and all its images? This can’t be undone.")) return;
           await deleteListing(r.id); notify.ok("Listing deleted"); router.push("/listings");
         }}>Delete listing</Button>
       </div>

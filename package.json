@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "thumbnails": "node --env-file=.env scripts/gen-thumbnails.mjs"
+    "assets": "node --env-file=.env scripts/gen-assets.mjs"
   },
   "dependencies": {
     "@meta-sam/parser": "^0.1.0",

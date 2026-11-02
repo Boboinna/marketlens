@@ -6,16 +6,13 @@ import type { VisualSettings } from "./image-styles";
  */
 export interface Template {
   id: string; label: string; description: string;
-  visual: Omit<VisualSettings, "notes">; ask: string[]; tone: string;
+  visual: Pick<VisualSettings, "style" | "bg" | "ratio">; ask: string[]; tone: string;
 }
 
 export const TEMPLATES: Template[] = [
-  { id: "marketplace", label: "Facebook Marketplace", description: "Square image, plain wording", visual: { style: "hero", bg: "white-studio", ratio: "1:1" }, ask: ["Pickup or delivery"], tone: "plain and factual" },
-  { id: "instagram", label: "Instagram shop post", description: "4:5 lifestyle image, friendly caption", visual: { style: "lifestyle", bg: "warm-wood", ratio: "4:5" }, ask: [], tone: "friendly Instagram caption" },
-  { id: "whatsapp", label: "WhatsApp catalog", description: "Story-size image, short message", visual: { style: "hero", bg: "grey-studio", ratio: "9:16" }, ask: [], tone: "short and friendly" },
-  { id: "food", label: "Food and packaged goods", description: "Infographic image, asks for ingredients and expiry", visual: { style: "infographic", bg: "kitchen", ratio: "1:1" }, ask: ["Ingredients", "Weight", "Expiry date"], tone: "" },
-  { id: "fashion", label: "Clothing and fashion", description: "Clean hero image, asks for material and care", visual: { style: "hero", bg: "grey-studio", ratio: "4:5" }, ask: ["Material", "Sizes available", "Care"], tone: "" },
-  { id: "handmade", label: "Handmade goods", description: "Lifestyle image, asks who made it and how to care for it", visual: { style: "lifestyle", bg: "warm-wood", ratio: "4:5" }, ask: ["Material", "Made by", "Care"], tone: "friendly" },
-  { id: "electronics", label: "Electronics", description: "Size chart image, asks for model and warranty", visual: { style: "size", bg: "white-studio", ratio: "1:1" }, ask: ["Model number", "Warranty", "What's in the box"], tone: "" },
-  { id: "books", label: "Books and prints", description: "Clean hero image, asks for author and edition", visual: { style: "hero", bg: "soft-gradient", ratio: "1:1" }, ask: ["Author", "Format", "Edition"], tone: "" },
+  { id: "vinted", label: "Vinted", description: "Flat lay, 4:5, clear and factual", visual: { style: "flatlay", bg: "auto", ratio: "4:5" }, ask: ["Fabric", "Care"], tone: "plain and factual" },
+  { id: "depop", label: "Depop", description: "Lifestyle scene, 4:5, friendly wording", visual: { style: "lifestyle", bg: "auto", ratio: "4:5" }, ask: ["Fabric"], tone: "friendly and trendy, short" },
+  { id: "marketplace", label: "Facebook Marketplace", description: "Pure white main image, square", visual: { style: "main", bg: "white", ratio: "1:1" }, ask: ["Pickup or delivery"], tone: "plain and factual" },
+  { id: "instagram", label: "Instagram shop", description: "Social ad with a real scene, 4:5", visual: { style: "social", bg: "auto", ratio: "4:5" }, ask: [], tone: "friendly Instagram caption" },
+  { id: "whatsapp", label: "WhatsApp status", description: "Ghost mannequin, story size", visual: { style: "ghost", bg: "cream", ratio: "9:16" }, ask: [], tone: "short and friendly" },
 ];

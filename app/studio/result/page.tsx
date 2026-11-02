@@ -1,17 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NeedsAttention } from "@/components/feedback/needs-attention";
 import { ClaimCheck } from "@/components/studio/claim-check";
 import { ImagePair } from "@/components/studio/image-pair";
 import { LangSwitch } from "@/components/studio/lang-switch";
 import { RegenBar } from "@/components/studio/regen-bar";
+import { TextReview } from "@/components/studio/text-review";
 import { StickyBar } from "@/components/studio/sticky-bar";
 import { Button } from "@/components/ui/button";
 import { styleById } from "@/config/image-styles";
 import { MAX_LISTING_RUNS, VISUALS_PER_PRODUCT } from "@/config/limits";
 import { useRequirePhoto } from "@/hooks/use-require-photo";
-import { useSegment } from "@/hooks/use-segment";
 import { channelTexts, fullText } from "@/lib/channels";
 import { api } from "@/lib/client/api";
 import { dataUrlToBlob } from "@/lib/client/blob";
@@ -19,7 +18,7 @@ import { copyText } from "@/lib/client/clipboard";
 import { clearDraft, type Visual } from "@/lib/client/drafts";
 import { downloadAll, downloadVisual } from "@/lib/client/export";
 import { saveListing } from "@/lib/client/listings";
-import { infographicDetails, productTitle, sizeText } from "@/lib/client/visual-inputs";
+import { defaultLines, garmentLine, hasCallouts as hasCalloutsOf, hasMeasurements as hasMeasurementsOf, measuresForImage, productTitle } from "@/lib/client/visual-inputs";
 import { notify, progress } from "@/lib/toast";
 import { checkClaims, listingText } from "@/lib/truthlock/claims";
 import type { Listing } from "@/lib/truthlock/schema";
@@ -28,17 +27,18 @@ import { selectResult, useStudio } from "@/store/studio";
 
 const field = "mt-1.5 w-full rounded-xl border border-line bg-s2 px-3.5 py-3 text-base text-tx outline-none sm:text-[15px]";
 const chip = "inline-flex items-center rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-mu";
+const LOW_MATCH = 65; // below this the quiet check adds a soft "check the colours" note. It never blocks anything.
 
 export default function ResultPage() {
   const router = useRouter();
   const ready = useRequirePhoto();
-  const { photo, match, segState, facts, lang, wording, vo, listings, removed, listingFor, listingRuns, visuals, selected, made, set } = useStudio();
+  const { photo, facts, lang, wording, vo, listings, removed, listingFor, listingRuns, visuals, selected, made, quota, set } = useStudio();
   const result = useStudio(selectResult);
-  const { run } = useSegment();
   const [writing, setWriting] = useState(false);
   const [busy, setBusy] = useState(false); // making a visual
   const [saving, setSaving] = useState(false);
   const [armed, setArmed] = useState<string | null>(null); // visual waiting for a second click to delete
+  const [review, setReview] = useState<string[] | null>(null); // words to check before another text image is made
   const listingTried = useRef(false);
   const visualTried = useRef(false);
 
@@ -59,22 +59,38 @@ export default function ResultPage() {
     }
   }, [set]);
 
-  const makeVisual = useCallback(async () => {
+  /**
+   * Starts one image. This is the moment a free image is used: the counter drops right away, and the server confirms it.
+   * If the image can't be made at all, the free image is given back.
+   */
+  const makeVisual = useCallback(async (lines?: string[]) => {
     const st = useStudio.getState();
-    if (!st.photo || !st.match || !st.runId || st.made >= VISUALS_PER_PRODUCT) return;
+    if (!st.photo || !st.runId || st.made >= VISUALS_PER_PRODUCT) return;
     setBusy(true);
-    const id = progress.start(st.made ? "Making a new visual…" : "Making your visual…");
+    const id = progress.start(st.made ? "Making a new image…" : "Making your image…");
+    if (st.quota) set({ quota: { ...st.quota, used: st.quota.used + 1, left: Math.max(0, st.quota.left - 1) } });
+    const refresh = () => api.quota().then((r) => set({ quota: r.quota })).catch(() => {});
     try {
+      const text = styleById(st.vo.style).hasText;
       const out = await api.visual({
-        ...st.vo, original: st.photo.dataUrl, extras: st.extras.map((p) => p.dataUrl), mask: st.match.maskPng, runId: st.runId, lang: st.lang,
-        title: productTitle(st.facts), details: infographicDetails(st.facts), size: sizeText(st.facts),
+        style: st.vo.style, bg: st.vo.bg, customBg: st.vo.customBg, ratio: st.vo.ratio, notes: st.vo.notes,
+        original: st.photo.dataUrl, extras: st.extras.map((p) => p.dataUrl), runId: st.runId, lang: st.lang,
+        garment: garmentLine(st.facts), lines: text ? (lines ?? st.vo.lines) : [], measures: measuresForImage(st.facts),
       });
-      const v: Visual = { id: crypto.randomUUID(), image: out.image, fidelity: out.fidelity, ...st.vo };
-      const cur = useStudio.getState(); // only a finished visual uses up an attempt
+      const v: Visual = { id: crypto.randomUUID(), image: out.image, match: null, style: st.vo.style, bg: st.vo.bg, customBg: st.vo.customBg, ratio: st.vo.ratio, notes: st.vo.notes };
+      const cur = useStudio.getState(); // only a finished image uses up an attempt
       set({ visuals: [...cur.visuals, v], selected: cur.visuals.length, made: cur.made + 1, quota: out.quota });
-      progress.ok(id, "Visual ready", `Made by AI · product match ${out.fidelity}%`);
+      progress.ok(id, "Image ready", "Check it, then save or make another.");
+      // The quiet check: colour and pattern against your photo. It runs in the background and is skipped if it can't run.
+      const phrase = st.analysis?.sam_phrases?.[0] || st.analysis?.product_type || "garment";
+      void api.check(st.photo.dataUrl, out.image, phrase).then((m) => {
+        if (m === null) return;
+        const now = useStudio.getState();
+        set({ visuals: now.visuals.map((x) => (x.id === v.id ? { ...x, match: m } : x)) });
+      });
     } catch (e) {
-      progress.fail(id, e, () => void makeVisual());
+      progress.fail(id, e, () => void makeVisual(lines));
+      void refresh();
     } finally {
       setBusy(false);
     }
@@ -85,8 +101,8 @@ export default function ResultPage() {
     if (ready && !listings && listingRuns === 0 && !writing && !listingTried.current) { listingTried.current = true; void writeListing(); }
   }, [ready, listings, listingRuns, writing, writeListing]);
   useEffect(() => {
-    if (ready && match && made === 0 && !busy && !visualTried.current) { visualTried.current = true; void makeVisual(); }
-  }, [ready, match, made, busy, makeVisual]);
+    if (ready && made === 0 && !busy && !visualTried.current) { visualTried.current = true; void makeVisual(); }
+  }, [ready, made, busy, makeVisual]);
 
   const current = listings?.[lang] ?? null;
   const issues = useMemo(() => (current ? checkClaims(listingText(current), facts) : []), [current, facts]);
@@ -96,7 +112,13 @@ export default function ResultPage() {
   const visualsLeft = Math.max(0, VISUALS_PER_PRODUCT - made);
   const listingLeft = Math.max(0, MAX_LISTING_RUNS - listingRuns);
   const stale = !!listings && listingFor !== factsKey(facts);
-  const hasSize = !!sizeText(facts), hasDetails = infographicDetails(facts).length > 0, hasTitle = !!productTitle(facts);
+  const hasMeasurements = hasMeasurementsOf(facts), hasCallouts = hasCalloutsOf(facts), hasTitle = !!productTitle(facts);
+  const freeLeft = quota?.left ?? 1;
+  // A text style asks the seller to check the words first. Other styles start straight away.
+  const requestMake = () => {
+    if (styleById(vo.style).hasText) setReview(vo.lines.length ? vo.lines : defaultLines(vo.style, facts, lang));
+    else void makeVisual();
+  };
   const title = productTitle(facts);
   const posts = current ? channelTexts(current, lang) : null;
   const upd = (p: Partial<Listing>) => listings && set({ listings: { ...listings, [lang]: { ...listings[lang], ...p } } });
@@ -106,7 +128,7 @@ export default function ResultPage() {
     const next = visuals.filter((v) => v.id !== id);
     set({ visuals: next, selected: Math.max(0, Math.min(selected, next.length - 1)) });
     setArmed(null);
-    notify.ok("Visual deleted", "It won’t be saved.");
+    notify.ok("Image deleted", "It won’t be saved.");
   };
 
   const finish = async (withVisuals: boolean) => {
@@ -118,11 +140,11 @@ export default function ResultPage() {
       await saveListing({
         id: st.draftId, createdAt: Date.now(), lang: st.lang, wording: st.wording, listings: st.listings,
         facts: st.facts, original: await dataUrlToBlob(st.photo.dataUrl),
-        visuals: await Promise.all(keep.map(async (v) => ({ id: v.id, blob: await dataUrlToBlob(v.image), style: v.style, ratio: v.ratio, fidelity: v.fidelity }))),
+        visuals: await Promise.all(keep.map(async (v) => ({ id: v.id, blob: await dataUrlToBlob(v.image), style: v.style, ratio: v.ratio, match: v.match }))),
       });
       set({ done: true });
       await clearDraft();
-      notify.ok("Saved to My listings", keep.length ? `${keep.length} ${keep.length === 1 ? "visual" : "visuals"} kept.` : "Saved with your original photo.");
+      notify.ok("Saved to My listings", keep.length ? `${keep.length} ${keep.length === 1 ? "image" : "images"} kept.` : "Saved with your original photo.");
       router.push(`/listings/${st.draftId}`);
     } catch {
       notify.warn("Couldn’t save the listing", "Your browser blocked storage. Copy your text and download the images instead.");
@@ -133,52 +155,46 @@ export default function ResultPage() {
   return (
     <div className="space-y-5 pb-2">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight sm:text-3xl">Your listing and visuals</h1>
-        <p className="mt-2 text-sm text-mu sm:text-base">Both are made from the details you approved. Edit the text freely, and make more visuals in other styles.</p>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-3xl">Your listing and images</h1>
+        <p className="mt-2 text-sm text-mu sm:text-base">Both are made from the details you approved. Edit the text freely, and make more images in other styles.</p>
       </div>
 
       <section aria-label="Visuals" className="rounded-2xl border border-line bg-s1 p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-semibold">Visuals</h2>
-          <span className="text-xs text-mu">{made} of {VISUALS_PER_PRODUCT} made for this product</span>
+          <h2 className="text-lg font-semibold">Images</h2>
+          <span className="text-xs text-mu">{made} of {VISUALS_PER_PRODUCT} made for this garment</span>
         </div>
 
-        {segState === "failed" && visuals.length === 0 ? (
-          <NeedsAttention title="The outline missed your product" body="Your listing is safe below. You can try again, use a clearer photo, or save with your original photo.">
-            <Button onClick={() => { set({ segState: "idle" }); void run(); }}>Try the outline again</Button>
-            <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Upload a clearer photo</Button>
-            <Button variant="ghost" disabled={saving || !listings} onClick={() => finish(false)}>Save with my original photo</Button>
-          </NeedsAttention>
-        ) : result ? (
+        {result ? (
           <>
-            <ImagePair original={photo.dataUrl} final={result.image} finalLabel={`Visual ${selected + 1} · ${result.ratio} · ${styleById(result.style).label}`} />
+            <ImagePair original={photo.dataUrl} final={result.image} finalLabel={`Image ${selected + 1} · ${result.ratio} · ${styleById(result.style).label}`} />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={chip}>Made by AI · product match {result.fidelity}%</span>
-                {styleById(result.style).hasText && <span className={`${chip} !border-con/30 !text-con`}>Text written by AI</span>}
+                <span className={chip}>Made by AI</span>
+                {result.match !== null && <span className={chip}>Colour and pattern match {result.match}%</span>}
+                {result.match !== null && result.match < LOW_MATCH && <span className={`${chip} !border-unk/40 !text-unk`}>Check the colours before you post</span>}
+                {styleById(result.style).hasText && <span className={`${chip} !border-con/30 !text-con`}>Words checked by you</span>}
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" className="!h-10 !px-3.5 !text-sm" onClick={() => void downloadVisual(title, result, selected)}>Download</Button>
                 <Button variant="ghost" className="!h-10 !px-3.5 !text-sm" onClick={() => deleteVisual(result.id)}>{armed === result.id ? "Click again to delete" : "Delete"}</Button>
               </div>
             </div>
-            {styleById(result.style).hasText && <p className="mt-2 text-xs text-mu">Check the words on this image before you post it. If a word is wrong, make another visual below.</p>}
+            {styleById(result.style).hasText && <p className="mt-2 text-xs text-mu">Check the words on this image before you post it. If a word is wrong, fix it and make another image below.</p>}
           </>
-        ) : busy || segState !== "done" ? (
-          <div className="flex h-[300px] animate-pulse items-center justify-center rounded-2xl border border-line bg-s2 text-mu sm:h-[360px]" aria-busy="true">
-            {segState === "done" ? "Making your visual…" : "Outlining your product…"}
-          </div>
+        ) : busy ? (
+          <div className="flex h-[300px] animate-pulse items-center justify-center rounded-2xl border border-line bg-s2 text-mu sm:h-[360px]" aria-busy="true">Making your image…</div>
         ) : (
           <div className="rounded-2xl border border-line bg-s2 p-8 text-center">
-            <h3 className="font-semibold">No visuals kept</h3>
-            <p className="mt-1 text-sm text-mu">{visualsLeft > 0 ? "Make a new one below, or save your listing with your original photo." : "All attempts are used. Save your listing with your original photo."}</p>
+            <h3 className="font-semibold">No images kept</h3>
+            <p className="mt-1 text-sm text-mu">{visualsLeft > 0 && freeLeft > 0 ? "Make a new one below, or save your listing with your original photo." : "No images left. Save your listing with your original photo."}</p>
           </div>
         )}
 
         {visuals.length > 1 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
             {visuals.map((v, i) => (
-              <button key={v.id} onClick={() => set({ selected: i })} aria-pressed={i === selected} aria-label={`Visual ${i + 1}`}
+              <button key={v.id} onClick={() => set({ selected: i })} aria-pressed={i === selected} aria-label={`Image ${i + 1}`}
                 className={`shrink-0 overflow-hidden rounded-xl border-2 ${i === selected ? "border-tx" : "border-line"}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={v.image} alt="" className="size-16 object-cover" />
@@ -187,13 +203,11 @@ export default function ResultPage() {
           </div>
         )}
 
-        {segState === "done" && (
-          <RegenBar
-            value={vo} onChange={(p) => set({ vo: { ...vo, ...p } })} hasSize={hasSize} hasDetails={hasDetails} hasTitle={hasTitle}
-            left={visualsLeft} total={VISUALS_PER_PRODUCT} busy={busy} canMake={!busy && visualsLeft > 0} onMake={() => void makeVisual()}
-          />
-        )}
-        <p className="mt-3 text-xs text-mu">Text on infographics and size charts is written in the language you pick on the Details step ({lang.toUpperCase()}).</p>
+        <RegenBar
+          value={vo} onChange={(v) => set({ vo: v })} hasMeasurements={hasMeasurements} hasCallouts={hasCallouts} hasTitle={hasTitle}
+          left={visualsLeft} total={VISUALS_PER_PRODUCT} freeLeft={freeLeft} busy={busy} canMake={!busy && visualsLeft > 0 && freeLeft > 0} onMake={requestMake}
+        />
+        <p className="mt-3 text-xs text-mu">Text on infographics, social ads and size charts is written in the language you picked on the Details step ({lang.toUpperCase()}).</p>
       </section>
 
       {current ? (
@@ -258,9 +272,16 @@ export default function ResultPage() {
       <StickyBar>
         <Button variant="ghost" onClick={() => router.push("/studio/details")}>Back<span className="hidden sm:inline">&nbsp;to details</span></Button>
         <Button disabled={!listings || saving || busy || writing} onClick={() => finish(true)}>
-          {saving ? "Saving…" : `Save listing${visuals.length ? ` with ${visuals.length} ${visuals.length === 1 ? "visual" : "visuals"}` : ""}`}
+          {saving ? "Saving…" : `Save listing${visuals.length ? ` with ${visuals.length} ${visuals.length === 1 ? "image" : "images"}` : ""}`}
         </Button>
       </StickyBar>
+      {review && (
+        <TextReview
+          style={vo.style} initial={review} confirmLabel="Looks good, make it"
+          onCancel={() => setReview(null)}
+          onConfirm={(lines) => { setReview(null); set({ vo: { ...vo, lines } }); void makeVisual(lines); }}
+        />
+      )}
     </div>
   );
 }

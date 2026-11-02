@@ -10,9 +10,12 @@ export interface SegmentMatch {
 
 export interface Provider {
   analyze(imageDataUrls: string[], ctx: Ctx): Promise<ModelAnalysis>; // first is the main photo
-  /** Image-to-image: the seller’s real product (cut out, on a plain canvas) goes in, a finished AI listing image comes out. */
-  listingVisual(inputDataUrl: string, refDataUrls: string[], prompt: string, size: string, ctx: Ctx): Promise<string>; // data URL
+  /** Image-to-image: the seller’s own photo goes in as it is, a finished AI image comes out. */
+  listingVisual(originalDataUrl: string, refDataUrls: string[], prompt: string, size: string, ctx: Ctx): Promise<string>; // data URL
   writeListings(facts: Fact[], ctx: Ctx, opts?: { style?: string }): Promise<Listings>;
   verifyListings(facts: Fact[], drafts: Listings, ctx: Ctx): Promise<VerifiedListings>;
+  /** Spelling and capitalisation check for on-image text. Same number of lines back. */
+  checkText(lines: string[], ctx: Ctx): Promise<string[]>;
+  /** Used only by the quiet colour and pattern check. */
   segment(imageDataUrl: string, phrase: string, ctx: Ctx): Promise<SegmentMatch | null>;
 }

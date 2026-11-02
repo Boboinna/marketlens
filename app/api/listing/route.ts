@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AppError } from "@/lib/meta/errors";
 import { metaProvider } from "@/lib/providers/meta";
-import { assertCanWriteListing, commitListingWrite, summary } from "@/lib/server/quota";
+import { assertCanWriteListing, commitListingWrite, toSummary } from "@/lib/server/quota";
 import { respond } from "@/lib/server/route";
 import type { VerifiedListings } from "@/lib/truthlock/schema";
 import { capitalizeBrand } from "@/lib/pipeline/brand";
@@ -37,9 +37,9 @@ export async function POST(req: Request) {
         // The verifier failing never blocks the listing. The claim check still runs in the browser.
       }
     }
-    await commitListingWrite(runId);
+    const q = await commitListingWrite(runId);
     const { removed, ...listings } = out;
     const brand = approved.find((f) => f.key === "brand")?.value;
-    return { listings: capitalizeBrand(listings, brand), removed, quota: await summary(runId) };
+    return { listings: capitalizeBrand(listings, brand), removed, quota: toSummary(q, runId) };
   });
 }

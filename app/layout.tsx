@@ -8,7 +8,7 @@ const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MarketLens",
-  description: "Turn one product photo into an honest, ready-to-post product listing with a studio image.",
+  description: "Turn one garment photo into an honest, ready-to-post clothing listing with fashion-ready images.",
 };
 export const viewport: Viewport = { themeColor: "#0B0D10", viewportFit: "cover" };
 

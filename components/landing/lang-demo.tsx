@@ -2,9 +2,9 @@
 import { useState } from "react";
 
 const SAMPLE = {
-  en: { name: "English", title: "Shein Smocked Crop Top, White with Black Stripes, UK Size 8", body: "Used Shein smocked crop top in white with black stripes, UK size 8, with thin spaghetti straps and a ruffled hem.", tags: ["smocked crop top", "white with black stripes", "UK size 8"] },
-  fr: { name: "Français", title: "Haut court smocké Shein, blanc à rayures noires, taille UK 8", body: "Haut court smocké Shein d’occasion, blanc à rayures noires, taille UK 8, avec fines bretelles et bas volanté.", tags: ["haut court smocké", "blanc à rayures noires", "taille UK 8"] },
-  es: { name: "Español", title: "Top corto fruncido Shein, blanco con rayas negras, talla UK 8", body: "Top corto fruncido Shein de segunda mano, blanco con rayas negras, talla UK 8, con tirantes finos y bajo con volante.", tags: ["top corto fruncido", "blanco con rayas negras", "talla UK 8"] },
+  en: { name: "English", title: "Missguided Spaghetti Strap Bodysuit in Silver Gray with Black Straps, UK Size 6", body: "Missguided spaghetti strap bodysuit in silver gray with black straps, UK size 6. Thin straps, scoop neckline, shimmery metallic finish and a pointed hem.", tags: ["spaghetti strap bodysuit", "Missguided", "silver gray", "UK size 6"] },
+  fr: { name: "Français", title: "Body Missguided à fines bretelles, gris argenté avec bretelles noires, taille UK 6", body: "Body Missguided à fines bretelles, gris argenté avec bretelles noires, taille UK 6. Fines bretelles, décolleté rond, finition métallisée scintillante et bas pointu.", tags: ["body à fines bretelles", "Missguided", "gris argenté", "taille UK 6"] },
+  es: { name: "Español", title: "Body Missguided de tirantes finos, gris plateado con tirantes negros, talla UK 6", body: "Body Missguided de tirantes finos, gris plateado con tirantes negros, talla UK 6. Tirantes finos, escote redondo, acabado metálico brillante y bajo en punta.", tags: ["body de tirantes finos", "Missguided", "gris plateado", "talla UK 6"] },
 } as const;
 
 /** One example listing in three languages. The three are written together, so they say the same true things. */

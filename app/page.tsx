@@ -1,37 +1,39 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { LangDemo } from "@/components/landing/lang-demo";
+import { SafeImg } from "@/components/landing/safe-img";
 import { Showcase } from "@/components/landing/showcase";
 import { buttonClass } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { FREE_GENERATIONS } from "@/config/limits";
 
 const STEPS = [
-  ["Add your photo", "Take it on your phone. One photo is enough. Add the back or a side if you like, and the AI uses every angle."],
-  ["Check the details", "MarketLens lists what it can see and asks you about the rest. Then you pick the language, image style, background and aspect ratio, and add your own scene notes."],
-  ["Post your listing and images", "Title, descriptions, highlights and tags in English, French and Spanish, plus marketing images made by AI, all from approved facts."],
+  ["Snap your garment", "A phone photo is enough, even on a mannequin or a hanger. Add the back or a side if you like and the AI sees every angle."],
+  ["Add size, fabric and fit", "MarketLens lists what it can see (colour, neckline, length) and asks you for what it can’t: size, fabric, fit, condition and brand. Add your bust, waist and length if you want a size chart."],
+  ["Post it everywhere", "Title, description and tags in English, French and Spanish, plus fashion-ready images, all from details you approved."],
 ];
 
 const BENEFITS = [
-  ["Save hours on every product", "No photo studio, no copywriter and no translator. Go from one phone photo to a finished listing and images in minutes."],
-  ["Honest by design", "Every detail is marked Observed, Confirmed or Blank. Claims your facts don’t support are removed, so buyers aren’t misled and you avoid disputes."],
-  ["Speaks your buyers’ language", "Every listing is written in English, French and Spanish together, and the text on your images can be in any of them."],
-  ["Marketing visuals for every channel", "Amazon-style hero shots, bold infographics, social ads, lifestyle scenes and ghost-mannequin clothing images, in the right shape for each channel."],
+  ["Photos like the big fashion shops", "Pure white main image, flat lay, ghost mannequin and styled scenes. The mannequin, hands and hanger disappear."],
+  ["Honest by design", "Every detail is Observed or Confirmed. Fabric, fit and size are never guessed, so buyers aren’t misled and you avoid returns and disputes."],
+  ["Speaks your buyers’ language", "Every listing is written in English, French and Spanish together, and the words on your images can be in any of them."],
+  ["You check every word on the image", "Before an infographic or ad is made, you see the exact text, with typos fixed and Title Case headlines, and change anything you like."],
 ];
 
 const USES = [
-  ["Online stores", "Paste the title, description and tags into your product page and upload your images."],
-  ["Instagram, Facebook and WhatsApp", "Get a ready-to-paste Marketplace post, Instagram caption and WhatsApp message for every product."],
-  ["Cross-border and multilingual sellers", "Reach buyers in English, French and Spanish with the same true facts, written naturally in each language."],
+  ["Vinted and Depop sellers", "Flat lays and bedroom or mirror scenes in the right shape for your listing, with a description that sounds like you."],
+  ["Instagram, Facebook and WhatsApp", "A ready-to-paste Marketplace post, Instagram caption and WhatsApp message for every piece, plus story-size images."],
+  ["Small fashion brands and thrifters", "Turn a rail of samples into a consistent catalog without a studio, a model or a copywriter."],
 ];
 
 const FAQ = [
-  ["Does it make things up?", "No. Details are marked observed, confirmed or blank. Anything it can’t see stays blank until you fill it in. A second pass removes claims your facts don’t support, and a claim check flags the rest."],
-  ["Is my product redrawn?", "No. Your real product is cut out of your photo, and Meta’s Muse Image builds the whole image around it: the background, the light and the shadows. It may tidy empty or badly framed edges, but a check makes sure your product itself has not changed. Text on infographics is written by the AI from your confirmed details only, so check the words before you post."],
-  ["Do I need photos of every side?", "No. One photo is enough. If you add the back or a side, the AI uses it to understand your product better, but it is always optional."],
-  ["Which languages are supported?", `English, French and Spanish. All three are written together in one go, so you can switch any time, and you choose the language for text on your images.`],
-  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models, and we ask them not to store requests. Your finished listings are saved only in your browser, on this device, under My listings."],
-  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} finished listings. There is no payment step yet.`],
+  ["Does it make things up?", "No. Details are marked Observed or Confirmed. Fabric, fit, size and condition stay blank until you fill them in. A second pass removes claims your facts don’t support, and a claim check flags the rest."],
+  ["Is my garment redrawn?", "Your photo goes to Meta’s Muse Image as it is. The AI removes the mannequin, hands and hanger and builds the image around the garment, keeping its colours, print and fabric. A quiet check then compares colour and pattern, and tells you if something looks off."],
+  ["Do I need photos of every side?", "No. One photo is enough. If you add the back or a side, the AI uses it to understand the garment better, but it is always optional."],
+  ["Can I choose my own background?", "Yes. Pick from clean colours, surfaces, rooms and bold ad colours that suit the style, leave it on Auto, or describe your own in a few words."],
+  ["Which languages are supported?", "English, French and Spanish. All three are written together in one go, so you can switch any time, and you choose the language for text on your images."],
+  ["Where are my photos and listings?", "Photos are processed by Meta’s AI models. Your finished listings are saved only in your browser, on this device, under My listings."],
+  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} images. A free image is used only when an image starts being made, never when you read a photo. There is no payment step yet.`],
 ];
 
 export default function Landing() {
@@ -46,25 +48,23 @@ export default function Landing() {
 
       <section className="grid items-center gap-10 py-10 md:grid-cols-[1.05fr_1fr] md:py-16">
         <div>
-          <StatusChip status="confirmed" label="For small sellers and brands" />
-          <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">One photo in. Marketing visuals and honest copy out.</h1>
+          <StatusChip status="confirmed" label="For fashion sellers and resellers" />
+          <h1 className="mt-5 text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">One garment photo in. Shop-ready images and honest listings out.</h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-mu">
-            MarketLens turns one product photo into marketing images and a listing in English, French and Spanish, using only details it can see or you confirm. No invented claims.
+            MarketLens turns one phone photo of a garment into flat lays, ghost mannequin shots and styled scenes, plus a listing in English, French and Spanish. It only uses details it can see or you confirm. No invented fabric or fit.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your listing</Link>
             <a href="#how" className={buttonClass("ghost") + " !h-[52px]"}>How it works</a>
           </div>
-          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
+          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free images. No account needed.</p>
         </div>
         <div className="relative grid grid-cols-2 gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/showcase/smocked-before.jpg" alt="Original seller photo" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/showcase/smocked-lifestyle.jpg" alt="AI-made marketing image of the same product" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover object-top" />
+          <SafeImg src="/showcase/bodysuit-before.jpg" alt="Original seller photo of a silver glitter bodysuit on a mannequin" label="Your photo" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
+          <SafeImg src="/showcase/bodysuit-flatlay.jpg" alt="AI-made flat lay of the same bodysuit" label="Flat lay" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
           <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
-            <StatusChip status="observed" label="Color: white with black stripes" />
-            <StatusChip status="unknown" label="Material: ask" />
+            <StatusChip status="observed" label="Colour: silver gray" />
+            <StatusChip status="unknown" label="Fabric: ask" />
           </div>
         </div>
       </section>
@@ -81,10 +81,10 @@ export default function Landing() {
       </section>
 
       <section aria-labelledby="lang" className="mt-14 border-t border-line pt-10">
-        <h2 id="lang" className="text-2xl font-semibold tracking-tight">One product, three languages</h2>
+        <h2 id="lang" className="text-2xl font-semibold tracking-tight">One garment, three languages</h2>
         <p className="mt-2 max-w-xl text-sm text-mu">The listing is written in English, French and Spanish together, not translated one after another, so every version says the same true things.</p>
         <div className="mt-6 max-w-2xl"><LangDemo /></div>
-        <p className="mt-3 text-xs text-mu">Example listing for the product in the photo above.</p>
+        <p className="mt-3 text-xs text-mu">Example listing for the bodysuit in the photo above.</p>
       </section>
 
       <section id="how" className="mt-14 border-t border-line pt-10">
@@ -101,7 +101,7 @@ export default function Landing() {
       </section>
 
       <section className="mt-14 border-t border-line pt-10">
-        <h2 className="text-2xl font-semibold tracking-tight">Made for people who sell online</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Made for people who sell clothes online</h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           {USES.map(([t, s]) => (
             <div key={t} className="rounded-2xl border border-line bg-s1 p-6">
@@ -122,8 +122,8 @@ export default function Landing() {
       </section>
 
       <section className="mt-14 rounded-2xl border border-line bg-s1 p-8 text-center sm:p-10">
-        <h2 className="text-2xl font-semibold tracking-tight">Ready to post your first product?</h2>
-        <p className="mt-2 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
+        <h2 className="text-2xl font-semibold tracking-tight">Ready to list your first piece?</h2>
+        <p className="mt-2 text-sm text-mu">{FREE_GENERATIONS} free images. No account needed.</p>
         <Link href="/studio/upload" className={buttonClass("primary") + " mt-5 !h-[52px]"}>Create your listing</Link>
       </section>
     </main>
