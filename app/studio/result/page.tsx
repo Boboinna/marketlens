@@ -33,7 +33,7 @@ const LOW_MATCH = 65; // below this the quiet check adds a soft "check the colou
 export default function ResultPage() {
   const router = useRouter();
   const ready = useRequirePhoto();
-  const { photo, facts, lang, wording, vo, listings, removed, listingFor, listingRuns, visuals, selected, made, quota, set } = useStudio();
+  const { photo, facts, lang, wording, vo, listings, removed, listingFor, listingRuns, visuals, selected, made, set } = useStudio();
   const result = useStudio(selectResult);
   const [writing, setWriting] = useState(false);
   const [busy, setBusy] = useState(false); // making a visual
@@ -61,15 +61,15 @@ export default function ResultPage() {
   }, [set]);
 
   /**
-   * Starts one image. This is the moment a free image is used: the counter drops right away, and the server confirms it.
-   * If the image can't be made at all, the free image is given back.
+   * Starts one image. The first image of a garment uses one free listing: the counter drops right away and the server confirms it.
+   * Extra images of the same garment are free, so the counter stays put. If the first image can't be made, the listing is given back.
    */
   const makeVisual = useCallback(async (lines?: string[]) => {
     const st = useStudio.getState();
     if (!st.photo || !st.runId || st.made >= VISUALS_PER_PRODUCT) return;
     setBusy(true);
     const id = progress.start(st.made ? "Making a new image…" : "Making your image…");
-    if (st.quota) set({ quota: { ...st.quota, used: st.quota.used + 1, left: Math.max(0, st.quota.left - 1) } });
+    if (st.quota && st.made === 0) set({ quota: { ...st.quota, used: st.quota.used + 1, left: Math.max(0, st.quota.left - 1) } });
     const refresh = () => api.quota().then((r) => set({ quota: r.quota })).catch(() => {});
     try {
       const text = styleById(st.vo.style).hasText;
@@ -115,7 +115,6 @@ export default function ResultPage() {
   const listingLeft = Math.max(0, MAX_LISTING_RUNS - listingRuns);
   const stale = !!listings && listingFor !== factsKey(facts);
   const hasMeasurements = hasMeasurementsOf(facts), hasCallouts = hasCalloutsOf(facts), hasTitle = !!productTitle(facts);
-  const freeLeft = quota?.left ?? 1;
   // A text style asks the seller to check the words first. Other styles start straight away.
   const requestMake = () => {
     if (styleById(vo.style).hasText) setReview(vo.lines.length ? vo.lines : defaultLines(vo.style, facts, lang));
@@ -189,7 +188,7 @@ export default function ResultPage() {
         ) : (
           <div className="rounded-2xl border border-line bg-s2 p-8 text-center">
             <h3 className="font-semibold">No images kept</h3>
-            <p className="mt-1 text-sm text-mu">{visualsLeft > 0 && freeLeft > 0 ? "Make a new one below, or save your listing with your original photo." : "No images left. Save your listing with your original photo."}</p>
+            <p className="mt-1 text-sm text-mu">{visualsLeft > 0 ? "Make a new one below, or save your listing with your original photo." : "No images left. Save your listing with your original photo."}</p>
           </div>
         )}
 
@@ -207,7 +206,7 @@ export default function ResultPage() {
 
         <RegenBar
           value={vo} onChange={(v) => set({ vo: v })} hasMeasurements={hasMeasurements} hasCallouts={hasCallouts} hasTitle={hasTitle}
-          left={visualsLeft} total={VISUALS_PER_PRODUCT} freeLeft={freeLeft} busy={busy} canMake={!busy && visualsLeft > 0 && freeLeft > 0} onMake={requestMake}
+          left={visualsLeft} total={VISUALS_PER_PRODUCT} busy={busy} canMake={!busy && visualsLeft > 0} onMake={requestMake}
         />
         <p className="mt-3 text-xs text-mu">Text on infographics, social ads and size charts is written in the language you picked on the Details step ({lang.toUpperCase()}).</p>
       </section>
@@ -272,14 +271,16 @@ export default function ResultPage() {
       {current && <ClaimCheck issues={issues} approved={approvedFacts(facts).length} removed={removed[lang]} />}
 
       <StickyBar>
-        <Button variant="ghost" onClick={() => router.push("/studio/details")}>Back<span className="hidden sm:inline">&nbsp;to details</span></Button>
+        <Button variant="ghost" onClick={() => router.push("/studio/details")}>
+          Back<span className="hidden sm:inline"> to details</span>
+        </Button>
         <Button disabled={!listings || saving || busy || writing} onClick={() => finish(true)}>
           {saving ? "Saving…" : `Save listing${visuals.length ? ` with ${visuals.length} ${visuals.length === 1 ? "image" : "images"}` : ""}`}
         </Button>
       </StickyBar>
       {review && (
         <TextReview
-          style={vo.style} initial={review} confirmLabel="Looks good, make it"
+          style={vo.style} initial={review} confirmLabel="Looks good, make it" note="This extra image is free."
           onCancel={() => setReview(null)}
           onConfirm={(lines) => { setReview(null); set({ vo: { ...vo, lines } }); void makeVisual(lines); }}
         />

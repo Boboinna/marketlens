@@ -37,13 +37,13 @@ export async function summary(runId?: string): Promise<QuotaSummary> {
   return toSummary(env.quotaEnabled() ? await read() : emptyQuota(), runId);
 }
 
-/** Throws before any paid call if photos have been read too many times. Reading a photo does not use a free image. */
+/** Throws before any paid call if photos have been read too many times. Reading a photo does not use a free listing. */
 export async function assertCanAnalyze() {
   if (!env.quotaEnabled()) return;
   if (!canAnalyze(await read(), MAX_ANALYSES)) throw new AppError("quota_exceeded", "Too many photos read on this device. Try again later.", false, 429);
 }
 
-/** Registers a garment after its photo was read. No free image is used yet. */
+/** Registers a garment after its photo was read. No free listing is used yet. */
 export async function commitRun(): Promise<{ runId: string; quota: Quota }> {
   const runId = randomUUID().slice(0, 8);
   const q = env.quotaEnabled() ? await write(startRun(await read(), runId)) : emptyQuota();
@@ -52,18 +52,19 @@ export async function commitRun(): Promise<{ runId: string; quota: Quota }> {
 
 /**
  * Called when an image starts being generated (the move from Details to Result, and every "Make another").
- * Uses one free image before the paid call. Throws if none are left, the garment is unknown, or its own cap is reached.
+ * The first image of a garment uses one free listing before the paid call. Regenerations of the same garment are free.
+ * Throws if the garment is unknown or its own cap is reached, or (for a new garment) if no free listings are left.
  */
 export async function reserveVisual(runId: string): Promise<Quota> {
   if (!env.quotaEnabled()) return emptyQuota();
   const q = await read();
   if (!isKnownRun(q, runId)) throw new AppError("bad_request", "Unknown garment. Start again from the photo.", false, 403);
-  if (!canGenerate(q, FREE_GENERATIONS)) throw new AppError("quota_exceeded", `You have used all ${FREE_GENERATIONS} free images.`, false, 402);
+  if (count(q, runId) === 0 && !canGenerate(q, FREE_GENERATIONS)) throw new AppError("quota_exceeded", `You have used all ${FREE_GENERATIONS} free listings.`, false, 402);
   if (count(q, runId) >= VISUALS_PER_PRODUCT) throw new AppError("regen_limit", `You have used all ${VISUALS_PER_PRODUCT} images for this garment.`, false, 403);
   return write(reserve(q, runId));
 }
 
-/** The AI could not make the image, so the free image is given back. */
+/** The AI could not make the image, so what it used is given back. */
 export async function refundVisual(runId: string): Promise<Quota> {
   if (!env.quotaEnabled()) return emptyQuota();
   return write(refund(await read(), runId));

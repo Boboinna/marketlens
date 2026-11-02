@@ -33,7 +33,7 @@ const FAQ = [
   ["Can I choose my own background?", "Yes. Pick from clean colours, surfaces, rooms and bold ad colours that suit the style, leave it on Auto, or describe your own in a few words."],
   ["Which languages are supported?", "English, French and Spanish. All three are written together in one go, so you can switch any time, and you choose the language for text on your images."],
   ["Where are my photos and listings?", "Photos are processed by Meta’s AI models. Your finished listings are saved only in your browser, on this device, under My listings."],
-  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} images. A free image is used only when an image starts being made, never when you read a photo. There is no payment step yet.`],
+  ["What does it cost?", `The free tier includes ${FREE_GENERATIONS} listings. A listing uses one when its first image starts being made. Reading a photo is free, and so are extra images for a listing you already started (up to 4 per garment). There is no payment step yet.`],
 ];
 
 export default function Landing() {
@@ -57,7 +57,7 @@ export default function Landing() {
             <Link href="/studio/upload" className={buttonClass("primary") + " !h-[52px]"}>Create your listing</Link>
             <a href="#how" className={buttonClass("ghost") + " !h-[52px]"}>How it works</a>
           </div>
-          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free images. No account needed.</p>
+          <p className="mt-5 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
         </div>
         <div className="relative grid grid-cols-2 gap-2">
           <SafeImg src="/showcase/bodysuit-before.jpg" alt="Original seller photo of a silver glitter bodysuit on a mannequin" label="Your photo" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
@@ -123,7 +123,7 @@ export default function Landing() {
 
       <section className="mt-14 rounded-2xl border border-line bg-s1 p-8 text-center sm:p-10">
         <h2 className="text-2xl font-semibold tracking-tight">Ready to list your first piece?</h2>
-        <p className="mt-2 text-sm text-mu">{FREE_GENERATIONS} free images. No account needed.</p>
+        <p className="mt-2 text-sm text-mu">{FREE_GENERATIONS} free listings. No account needed.</p>
         <Link href="/studio/upload" className={buttonClass("primary") + " mt-5 !h-[52px]"}>Create your listing</Link>
       </section>
     </main>

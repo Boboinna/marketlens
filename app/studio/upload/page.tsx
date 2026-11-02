@@ -87,7 +87,7 @@ export default function UploadPage() {
 
       {draft && (
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-s1 p-4">
-          <p className="flex-1 text-sm">You have an unfinished garment.{isUnused(draft) && <span className="block text-xs text-mu">No image was made yet, so no free image was used.</span>}</p>
+          <p className="flex-1 text-sm">You have an unfinished garment.{isUnused(draft) && <span className="block text-xs text-mu">No image was made yet, so no free listing was used.</span>}</p>
           <Button variant="ghost" className="!h-10" onClick={() => { void clearDraft(); setDraft(undefined); }}>Discard</Button>
           <Button className="!h-10" onClick={() => { hydrate(draft); router.push(resumePath(draft)); }}>Continue</Button>
         </div>
@@ -153,7 +153,7 @@ export default function UploadPage() {
           {mode === "template" && !tpl && <p className="mt-2 text-xs text-mu">Choose a template first, or switch to Start from scratch.</p>}
         </div>
       )}
-      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device. Reading a photo is free: a free image is used only when an image starts being made.</p>
+      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device. Reading a photo is free: a free listing is used only when its first image starts being made.</p>
     </div>
   );
 }

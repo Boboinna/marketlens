@@ -45,7 +45,7 @@ export function Showcase() {
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         {IMAGE_STYLES.map((s) => (
           <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-s1 p-3.5">
-            <span className="min-w-0"><b className="block text-sm">{s.label}{s.isNew && <span className="ml-2 rounded-full border border-con/40 px-1.5 text-[10px] font-normal text-con">New</span>}</b><span className="mt-0.5 block text-xs leading-relaxed text-mu">{s.description}</span></span>
+            <span className="min-w-0"><b className="block text-sm">{s.label}</b><span className="mt-0.5 block text-xs leading-relaxed text-mu">{s.description}</span></span>
             <Thumb src={s.thumb} label={s.label} className="size-14" />
           </li>
         ))}

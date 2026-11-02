@@ -31,13 +31,13 @@ const fromUrl = (u: string) => Buffer.from(u.split(",")[1] ?? "", "base64");
  * tells the AI to remove the mannequin, hands and hanger, keep the garment's colors, print and fabric, and complete any gaps.
  * No code cuts the garment out or assembles any part of the picture.
  *
- * The free image is used here, before the AI call, because this is the moment the image starts being generated.
- * If the AI cannot make an image at all, it is given back.
+ * The free listing is used here, before the AI call, but only for the first image of a garment. Regenerations are free.
+ * If the AI cannot make an image at all, what was used is given back.
  */
 export async function POST(req: Request) {
   return respond(async (ctx) => {
     const b = Body.parse(await req.json());
-    // Check what the style needs before using a free image.
+    // Check what the style needs before using a free listing.
     if (b.style === "size" && !b.measures.length) throw new AppError("bad_request", "Add your bust, waist or length first.", false, 400);
     if (b.style === "social" && !b.garment.trim()) throw new AppError("bad_request", "Confirm what the garment is first.", false, 400);
     if (b.style === "infographic" && b.lines.filter(Boolean).length < 2) throw new AppError("bad_request", "Add a title and at least one callout.", false, 400);

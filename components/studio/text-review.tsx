@@ -5,7 +5,7 @@ import { api } from "@/lib/client/api";
 import { Button } from "../ui/button";
 
 interface Props {
-  style: StyleId; initial: string[]; confirmLabel: string;
+  style: StyleId; initial: string[]; confirmLabel: string; note: string;
   onConfirm: (lines: string[]) => void; onCancel: () => void;
 }
 
@@ -20,7 +20,7 @@ const LABELS: Record<StyleId, string[]> = {
  * Shows the exact words that will be printed on the image, so the seller can fix anything before it is made.
  * Muse Spark proofreads them first (for example "polka bots" becomes "Polka Dots") and any fix is marked. Nothing is made until the seller confirms.
  */
-export function TextReview({ style, initial, confirmLabel, onConfirm, onCancel }: Props) {
+export function TextReview({ style, initial, confirmLabel, note, onConfirm, onCancel }: Props) {
   const [lines, setLines] = useState<string[]>(initial);
   const [fixed, setFixed] = useState<boolean[]>(initial.map(() => false));
   const [checking, setChecking] = useState(true);
@@ -66,7 +66,7 @@ export function TextReview({ style, initial, confirmLabel, onConfirm, onCancel }
             </label>
           ))}
         </div>
-        <p className="mt-3 text-xs text-mu">Short words read best on a phone. Headlines are in Title Case. This uses 1 of your free images when you continue.</p>
+        <p className="mt-3 text-xs text-mu">Short words read best on a phone. Headlines are in Title Case. {note}</p>
 
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={onCancel}>Back</Button>

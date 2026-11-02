@@ -17,6 +17,7 @@ import { RATIOS, styleById } from "@/config/image-styles";
 import { langName } from "@/config/languages";
 import type { Template } from "@/config/templates";
 import { withStyle } from "@/config/visual";
+import { useQuota } from "@/hooks/use-quota";
 import { useRequirePhoto } from "@/hooks/use-require-photo";
 import { saveMyTemplate } from "@/lib/client/templates";
 import { defaultLines, hasCallouts as hasCalloutsOf, hasMeasurements as hasMeasurementsOf, productTitle } from "@/lib/client/visual-inputs";
@@ -32,7 +33,8 @@ const CORE = new Map(CORE_FIELDS.map((c) => [c.key, c]));
 export default function DetailsPage() {
   const router = useRouter();
   const ready = useRequirePhoto();
-  const { photo, analysis, facts, lang, wording, vo, set } = useStudio();
+  const { photo, analysis, facts, lang, wording, vo, made, visuals, set } = useStudio();
+  const quota = useQuota();
   const [tplName, setTplName] = useState<string | null>(null); // null = the save form is closed
   const [review, setReview] = useState<string[] | null>(null); // the words to check before a text image is made
   const initialLines = useMemo(() => (vo.lines.length ? vo.lines : defaultLines(vo.style, facts, lang)), [vo.lines, vo.style, facts, lang]);
@@ -57,7 +59,10 @@ export default function DetailsPage() {
   const sizeBlank = !facts.find((f) => f.key === "size")?.value.trim();
   const hasMeasurements = hasMeasurementsOf(facts), hasCallouts = hasCalloutsOf(facts), hasTitle = !!productTitle(facts);
   const styleOk = !blockedReason(vo.style, hasMeasurements, hasCallouts, hasTitle);
-  const canCreate = approvedFacts(facts).length > 0;
+  // Once an image exists, this screen only edits details. It never starts another image, whatever was changed here.
+  const generated = made > 0 || visuals.length > 0;
+  const outOfFree = !generated && !!quota && quota.left <= 0; // a new garment needs a free listing
+  const canCreate = approvedFacts(facts).length > 0 && !outOfFree;
   const textStyle = styleById(vo.style).hasText;
 
   const saveTemplate = () => {
@@ -78,6 +83,11 @@ export default function DetailsPage() {
   };
 
   const create = () => {
+    if (generated) { // Next: save the edited details and return to the result. Nothing is generated.
+      set({ facts: dropBlankCustom(facts) });
+      router.push("/studio/result");
+      return;
+    }
     // The settings can change after facts did (for example a cleared measurement), so check them once more.
     if (!styleOk) {
       set({ vo: withStyle(vo, "main") });
@@ -92,7 +102,7 @@ export default function DetailsPage() {
     <div className="grid gap-5 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-8">
       <div className="md:sticky md:top-6 md:self-start">
         <PhotoStage src={photo.dataUrl} pins={pins} />
-        <p className="mt-2 hidden text-xs text-mu md:block">Pins match the numbered rows. Nothing is made, and no free image is used, until you press Create.</p>
+        <p className="mt-2 hidden text-xs text-mu md:block">{generated ? "Pins match the numbered rows." : "Pins match the numbered rows. Nothing is made, and no free listing is used, until you press Create."}</p>
       </div>
 
       <div className="min-w-0 space-y-4 sm:space-y-5">
@@ -101,6 +111,17 @@ export default function DetailsPage() {
           <p className="mt-1.5 hidden text-mu sm:block">Three short stages. Everything is chosen here, then your listing and image are made together on the next screen.</p>
           <p className="mt-1 text-[13px] text-mu sm:hidden">Check the details, pick the wording, then choose your image.</p>
         </div>
+
+        {generated && (
+          <p role="status" className="rounded-xl border border-line bg-s1 p-3.5 text-sm text-mu">
+            This garment already has an image. You can still fix its details here, but nothing is made again from this screen. Press <b className="text-tx">Next</b> to go back to your result, where you can update the listing and make extra images.
+          </p>
+        )}
+        {outOfFree && (
+          <p role="status" className="rounded-xl border border-unk/30 bg-unk/10 p-3.5 text-sm text-unk">
+            You’ve used all your free listings, so a new image can’t be made. Your saved listings are still available.
+          </p>
+        )}
 
         {analysis?.is_garment === false && (
           <p role="status" className="rounded-xl border border-unk/30 bg-unk/10 p-3.5 text-sm text-unk">
@@ -148,6 +169,7 @@ export default function DetailsPage() {
           </div>
         </Section>
 
+        {!generated && (
         <Section n={3} title="Image" hint="Your photo goes to the AI as it is. It removes the mannequin, hands and hanger, keeps your garment’s colours, print and fabric, and builds the image around it.">
           <ImageSettings value={vo} onChange={(v) => set({ vo: v })} hasMeasurements={hasMeasurements} hasCallouts={hasCallouts} hasTitle={hasTitle} />
           <div className="mt-6 border-t border-line pt-4">
@@ -165,19 +187,22 @@ export default function DetailsPage() {
             )}
           </div>
         </Section>
+        )}
       </div>
 
       <StickyBar>
-        <p className="mr-auto hidden min-w-0 truncate text-xs text-mu lg:block">
-          {langName(lang)} · {styleById(vo.style).label} · {vo.ratio} {RATIOS[vo.ratio].label} · {vo.style === "main" ? "Pure white" : vo.bg === CUSTOM_BG ? "Your own background" : bgById(vo.bg).label}
-        </p>
-        <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Back</Button>
+        {!generated && (
+          <p className="mr-auto hidden min-w-0 truncate text-xs text-mu lg:block">
+            {langName(lang)} · {styleById(vo.style).label} · {vo.ratio} {RATIOS[vo.ratio].label} · {vo.style === "main" ? "Pure white" : vo.bg === CUSTOM_BG ? "Your own background" : bgById(vo.bg).label}
+          </p>
+        )}
+        {!generated && <Button variant="ghost" onClick={() => router.push("/studio/upload")}>Back</Button>}
         <Button disabled={!canCreate} onClick={create}>
-          <span className="sm:hidden">{textStyle ? "Next" : "Create"}</span><span className="hidden sm:inline">{textStyle ? "Check the words, then create" : "Create listing and image"}</span>
+          {generated ? "Next" : (<><span className="sm:hidden">{textStyle ? "Next" : "Create"}</span><span className="hidden sm:inline">{textStyle ? "Check the words, then create" : "Create listing and image"}</span></>)}
         </Button>
       </StickyBar>
 
-      {review && <TextReview style={vo.style} initial={review} confirmLabel="Looks good, make it" onCancel={() => setReview(null)} onConfirm={(lines) => { setReview(null); go(lines); }} />}
+      {review && !generated && <TextReview style={vo.style} initial={review} confirmLabel="Looks good, make it" note="This uses 1 of your free listings when you continue." onCancel={() => setReview(null)} onConfirm={(lines) => { setReview(null); go(lines); }} />}
     </div>
   );
 }

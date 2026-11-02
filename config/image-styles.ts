@@ -7,7 +7,7 @@ export type StyleId = (typeof STYLE_IDS)[number];
  */
 export interface ImageStyle {
   id: StyleId; label: string; description: string; hasText: boolean; needs?: "measurements" | "details" | "title";
-  isNew?: boolean; thumb: string;
+  thumb: string;
 }
 
 const style = (id: StyleId, label: string, description: string, extra: Partial<ImageStyle> = {}): ImageStyle =>
@@ -19,7 +19,7 @@ export const IMAGE_STYLES: ImageStyle[] = [
   style("ghost", "Ghost mannequin", "Shown as if worn on an invisible body. Best for tops, dresses and bodysuits."),
   style("lifestyle", "Lifestyle", "In a real setting that suits the piece: bedroom, mirror corner, rail or street."),
   style("infographic", "Infographic", "Bold title and up to 3 big callouts on a light plain background.", { hasText: true, needs: "details" }),
-  style("social", "Social ad", "A real scene behind a large garment, with a short headline for Instagram or Depop.", { hasText: true, needs: "title", isNew: true }),
+  style("social", "Social ad", "A real scene behind a large garment, with a short headline for Instagram or Depop.", { hasText: true, needs: "title" }),
   style("size", "Size chart", "Measurement lines from the bust, waist and length you entered.", { hasText: true, needs: "measurements" }),
 ];
 

@@ -10,7 +10,7 @@ const D = z.string().startsWith("data:image/");
 // One to three photos of the same garment. Only the first is required.
 const Body = z.object({ images: z.array(D).min(1).max(3) });
 
-/** Reads the photo. This never uses a free image: those are used when an image starts being generated. */
+/** Reads the photo. This never uses a free listing: one is used when the first image starts being generated. */
 export async function POST(req: Request) {
   return respond(async (ctx) => {
     const { images } = Body.parse(await req.json());

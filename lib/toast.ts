@@ -25,7 +25,7 @@ const MESSAGES: Record<string, [string, string]> = {
   bad_request: ["Something about that request was off", "Reload the page and try again."],
   bad_output: ["The AI’s answer was unreadable", "Try again."],
   no_match: ["Couldn’t find the garment", "Try a clearer photo of the whole garment."],
-  quota_exceeded: ["Free images used up", "You’ve used all your free images. Your saved listings are still available."],
+  quota_exceeded: ["Free listings used up", "You’ve used all your free listings. Your saved listings are still available."],
   regen_limit: ["No more images for this garment", "Choose from the images you already made."],
   auth: ["The server can’t reach the AI", "Check the API key in your environment."],
   billing: ["The AI account needs attention", "Check billing on the Meta Model API dashboard."],

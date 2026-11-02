@@ -7,7 +7,7 @@ export class ApiError extends Error {
   constructor(public code: string, message: string, public retryable = false, public retryAfter?: number) { super(message); }
 }
 
-/** `left` is the free images remaining. It is what the header shows. */
+/** `left` is the free listings remaining. It is what the header shows. */
 export interface QuotaInfo { used: number; limit: number; left: number; visualsLeft: number; listingLeft: number }
 
 /** Handles JSON errors, non-JSON timeout pages, client timeouts and being offline. */

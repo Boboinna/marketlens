@@ -39,7 +39,7 @@ export const count = (q: Quota, key: string) => q.runs[key] ?? 0;
 export const isKnownRun = (q: Quota, runId: string) => runId in q.runs;
 export const left = (q: Quota, key: string, cap: number) => Math.max(0, cap - count(q, key));
 
-/** A photo was read. Registers the garment but does not use a free image. */
+/** A photo was read. Registers the garment but does not use a free listing. */
 export function startRun(q: Quota, runId: string): Quota {
   const runs = { ...q.runs, [runId]: 0, [`w:${runId}`]: 0 };
   const keys = Object.keys(runs);
@@ -47,13 +47,20 @@ export function startRun(q: Quota, runId: string): Quota {
   return { used: q.used, runs, a: (q.a ?? 0) + 1 };
 }
 
-/** An image starts being generated: one free image is used, and the garment's own counter goes up. */
-export const reserve = (q: Quota, runId: string): Quota => ({ ...q, used: q.used + 1, runs: { ...q.runs, [runId]: count(q, runId) + 1 } });
+/**
+ * An image starts being generated. The FIRST image of a garment uses one of the free listings. Every later image of the
+ * same garment (a regeneration) is free: it only goes up on that garment's own counter.
+ */
+export const reserve = (q: Quota, runId: string): Quota => {
+  const first = count(q, runId) === 0;
+  return { ...q, used: first ? q.used + 1 : q.used, runs: { ...q.runs, [runId]: count(q, runId) + 1 } };
+};
 
-/** The image could not be made at all, so the free image is given back. */
-export const refund = (q: Quota, runId: string): Quota => ({
-  ...q, used: Math.max(0, q.used - 1), runs: { ...q.runs, [runId]: Math.max(0, count(q, runId) - 1) },
-});
+/** The image could not be made at all. The garment's counter goes back, and the free listing too if it was the first image. */
+export const refund = (q: Quota, runId: string): Quota => {
+  const c = count(q, runId);
+  return { ...q, used: c === 1 ? Math.max(0, q.used - 1) : q.used, runs: { ...q.runs, [runId]: Math.max(0, c - 1) } };
+};
 
 export const bump = (q: Quota, key: string): Quota => ({ ...q, runs: { ...q.runs, [key]: count(q, key) + 1 } });
 
