@@ -48,4 +48,4 @@ export const MAX_LINES = 5;
  * `lines` are the exact words for text styles. The seller reviews them before the image is made.
  */
 export interface VisualSettings { style: StyleId; bg: string; customBg: string; ratio: Ratio; notes: string; lines: string[] }
-export const DEFAULT_VISUAL: VisualSettings = { style: "main", bg: "auto", customBg: "", ratio: "4:5", notes: "", lines: [] };
+export const DEFAULT_VISUAL: VisualSettings = { style: "main", bg: "white", customBg: "", ratio: "4:5", notes: "", lines: [] };

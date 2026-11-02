@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     if (b.style === "size" && !b.measures.length) throw new AppError("bad_request", "Add your bust, waist or length first.", false, 400);
     if (b.style === "social" && !b.garment.trim()) throw new AppError("bad_request", "Confirm what the garment is first.", false, 400);
     if (b.style === "infographic" && b.lines.filter(Boolean).length < 2) throw new AppError("bad_request", "Add a title and at least one callout.", false, 400);
-    if (b.bg !== CUSTOM_BG && !isBgValid(b.style, b.bg)) throw new AppError("bad_request", "That background doesn't suit this image style.", false, 400);
+    if (b.style !== "main" && b.bg !== CUSTOM_BG && !isBgValid(b.style, b.bg)) throw new AppError("bad_request", "That background doesn't suit this image style.", false, 400);
 
     const quotaAfterReserve = await reserveVisual(b.runId);
     try {

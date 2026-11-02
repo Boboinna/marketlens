@@ -24,6 +24,7 @@ import { checkClaims, listingText } from "@/lib/truthlock/claims";
 import type { Listing } from "@/lib/truthlock/schema";
 import { approvedFacts, factsKey } from "@/lib/truthlock/status";
 import { selectResult, useStudio } from "@/store/studio";
+import { normalizeVisual } from "@/config/visual";
 
 const field = "mt-1.5 w-full rounded-xl border border-line bg-s2 px-3.5 py-3 text-base text-tx outline-none sm:text-[15px]";
 const chip = "inline-flex items-center rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-mu";
@@ -72,12 +73,13 @@ export default function ResultPage() {
     const refresh = () => api.quota().then((r) => set({ quota: r.quota })).catch(() => {});
     try {
       const text = styleById(st.vo.style).hasText;
+      const vo = normalizeVisual(st.vo);
       const out = await api.visual({
-        style: st.vo.style, bg: st.vo.bg, customBg: st.vo.customBg, ratio: st.vo.ratio, notes: st.vo.notes,
+        style: vo.style, bg: vo.bg, customBg: vo.customBg, ratio: vo.ratio, notes: vo.notes,
         original: st.photo.dataUrl, extras: st.extras.map((p) => p.dataUrl), runId: st.runId, lang: st.lang,
         garment: garmentLine(st.facts), lines: text ? (lines ?? st.vo.lines) : [], measures: measuresForImage(st.facts),
       });
-      const v: Visual = { id: crypto.randomUUID(), image: out.image, match: null, style: st.vo.style, bg: st.vo.bg, customBg: st.vo.customBg, ratio: st.vo.ratio, notes: st.vo.notes };
+      const v: Visual = { id: crypto.randomUUID(), image: out.image, match: null, style: vo.style, bg: vo.bg, customBg: vo.customBg, ratio: vo.ratio, notes: vo.notes };
       const cur = useStudio.getState(); // only a finished image uses up an attempt
       set({ visuals: [...cur.visuals, v], selected: cur.visuals.length, made: cur.made + 1, quota: out.quota });
       progress.ok(id, "Image ready", "Check it, then save or make another.");

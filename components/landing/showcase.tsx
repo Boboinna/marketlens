@@ -22,7 +22,7 @@ export function Showcase() {
       <div className="mt-6 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
         <figure className="overflow-hidden rounded-2xl border border-line bg-s1">
           <SafeImg src="/showcase/bodysuit-before.jpg" alt="Seller’s original photo of a silver glitter bodysuit on a mannequin" label="Your photo" className="aspect-[4/5] w-full object-cover" />
-          <figcaption className="p-3.5 text-sm"><b>Your photo</b><span className="block text-xs text-mu">Taken on a phone, on a mannequin.</span></figcaption>
+          <figcaption className="p-3.5 text-sm"><b>Your photo</b><span className="block text-xs text-mu">Taken on a phone.</span></figcaption>
         </figure>
         <span aria-hidden className="mx-auto rotate-90 text-2xl text-mu md:rotate-0">→</span>
         <figure className="overflow-hidden rounded-2xl border border-line bg-s1">
