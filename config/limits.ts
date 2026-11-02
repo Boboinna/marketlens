@@ -1,5 +1,5 @@
 /** Free listings per browser. A listing uses one when its FIRST image starts being generated. Regenerations of that listing are free. */
-export const FREE_GENERATIONS = 10;
+export const FREE_GENERATIONS = 5;
 export const REGENS_PER_PRODUCT = 3;
 export const LISTING_REGENS_PER_PRODUCT = 3;
 export const VISUALS_PER_PRODUCT = 1 + REGENS_PER_PRODUCT;

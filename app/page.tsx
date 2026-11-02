@@ -63,8 +63,8 @@ export default function Landing() {
           <SafeImg src="/showcase/bodysuit-before.jpg" alt="Original seller photo of a silver glitter bodysuit on a mannequin" label="Your photo" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
           <SafeImg src="/showcase/bodysuit-flatlay.jpg" alt="AI-made flat lay of the same bodysuit" label="Flat lay" className="aspect-[4/5] w-full rounded-2xl border border-line object-cover" />
           <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
-            <StatusChip status="observed" label="Colour: silver gray" />
-            <StatusChip status="unknown" label="Fabric: ask" />
+            {/* <StatusChip status="observed" label="Colour: silver gray" />
+            <StatusChip status="unknown" label="Fabric: ask" /> */}
           </div>
         </div>
       </section>
