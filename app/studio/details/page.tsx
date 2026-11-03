@@ -102,7 +102,7 @@ export default function DetailsPage() {
     <div className="grid gap-5 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-8">
       <div className="md:sticky md:top-6 md:self-start">
         <PhotoStage src={photo.dataUrl} pins={pins} />
-        <p className="mt-2 hidden text-xs text-mu md:block">{generated ? "Pins match the numbered rows." : "Pins match the numbered rows. Nothing is made, and no free listing is used, until you press Create."}</p>
+        <p className="mt-2 hidden text-xs text-mu md:block">Pins match the numbered rows.</p>
       </div>
 
       <div className="min-w-0 space-y-4 sm:space-y-5">
@@ -170,7 +170,7 @@ export default function DetailsPage() {
         </Section>
 
         {!generated && (
-        <Section n={3} title="Image" hint="Your photo goes to the AI as it is. It removes the mannequin, hands and hanger, keeps your garment’s colours, print and fabric, and builds the image around it.">
+        <Section n={3} title="Image">
           <ImageSettings value={vo} onChange={(v) => set({ vo: v })} hasMeasurements={hasMeasurements} hasCallouts={hasCallouts} hasTitle={hasTitle} />
           <div className="mt-6 border-t border-line pt-4">
             {tplName === null ? (

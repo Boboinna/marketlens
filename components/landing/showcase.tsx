@@ -17,7 +17,7 @@ export function Showcase() {
   return (
     <section aria-labelledby="see" className="mt-14 border-t border-line pt-10">
       <h2 id="see" className="text-2xl font-semibold tracking-tight">See it in action</h2>
-      <p className="mt-2 max-w-xl text-sm text-mu">A phone photo on a mannequin becomes the kind of image you see on top fashion shops and resale apps. The garment stays yours: same colours, same print, same fabric. The mannequin, the hands and the messy room are gone.</p>
+      <p className="mt-2 max-w-xl text-sm text-mu">Your garment stays yours. Everything around it gets cleaned up.</p>
 
       <div className="mt-6 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
         <figure className="overflow-hidden rounded-2xl border border-line bg-s1">

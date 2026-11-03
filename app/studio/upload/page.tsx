@@ -153,7 +153,7 @@ export default function UploadPage() {
           {mode === "template" && !tpl && <p className="mt-2 text-xs text-mu">Choose a template first, or switch to Start from scratch.</p>}
         </div>
       )}
-      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device. Reading a photo is free: a free listing is used only when its first image starts being made.</p>
+      <p className="mt-4 text-center text-xs text-mu">Photos are processed by Meta’s AI models. Your listings are saved only on this device.</p>
     </div>
   );
 }
