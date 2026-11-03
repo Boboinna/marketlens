@@ -11,7 +11,7 @@ export function StylePicker({ value, onChange, blocked, compact }: Props) {
     <div>
       <ImageSelect
         label="Image style" value={value} onChange={(id) => onChange(id as StyleId)}
-        options={IMAGE_STYLES.map((s) => ({ id: s.id, label: s.label, thumb: s.thumb, isNew: s.isNew, blocked: blocked(s.id) }))}
+        options={IMAGE_STYLES.map((s) => ({ id: s.id, label: s.label, thumb: s.thumb, blocked: blocked(s.id) }))}
       />
       {!compact && (
         <p className="mt-2 text-[13px] text-mu">
