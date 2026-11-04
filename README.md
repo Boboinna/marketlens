@@ -13,7 +13,7 @@ Built for the **Meta Global AI Developer Hackathon**. Track: **Build for Your Wo
 
 ## What existed before, and what I built this week
 
-Before the hackathon, MarketLens did not exist. The repository was created on Oct 26, 2026, and everything in it was built during the event (Oct 26 to Nov 4, 2026). See [Built during the hackathon](#built-during-the-hackathon) for the list.
+Before the hackathon, MarketLens did not exist. The repository was created on Oct 26, 2026, and everything in it was built during the event (Oct 26 to Nov 4, 2026).
 
 ## Why it exists
 
