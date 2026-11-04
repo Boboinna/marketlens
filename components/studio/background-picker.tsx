@@ -21,7 +21,7 @@ interface Props {
 export function BackgroundPicker({ style, value, custom, onChange, onCustom, disabled }: Props) {
   if (style === "main") {
     return (
-      <div className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-line bg-s2 py-1.5 pl-3.5 pr-2 opacity-80">
+      <div className="flex min-h-14 max-[430px]:min-w-0 items-center justify-between gap-3 rounded-xl border border-line bg-s2 py-1.5 pl-3.5 pr-2 opacity-80">
         <span><span className="block text-[15px] font-medium">Pure white</span><span className="block text-xs text-mu">The main image is always on pure white</span></span>
         <Thumb src={bgById("white").thumb} label="White" />
       </div>
@@ -41,9 +41,9 @@ export function BackgroundPicker({ style, value, custom, onChange, onCustom, dis
             aria-label="Describe your own background" value={custom} maxLength={CUSTOM_BG_MAX} disabled={disabled}
             onChange={(e) => onCustom(e.target.value)}
             placeholder="e.g. pink bedroom with fairy lights"
-            className="h-12 w-full rounded-xl border border-line bg-s2 px-3.5 text-base text-tx outline-none focus:border-[#3a434e] sm:text-[15px]"
+            className="h-12 w-full max-[430px]:min-w-0 max-[430px]:max-w-full rounded-xl border border-line bg-s2 px-3.5 text-base text-tx outline-none focus:border-[#3a434e] sm:text-[15px]"
           />
-          <p className="mt-1 flex justify-between gap-3 text-xs text-mu">
+          <p className="mt-1 flex justify-between gap-3 max-[430px]:flex-col max-[430px]:gap-1 text-xs text-mu">
             <span>{plainOnly ? "It will be kept light and plain so the text stays readable." : "Leave it empty and we pick one to match your garment."}</span>
             <span className="font-mono">{custom.length}/{CUSTOM_BG_MAX}</span>
           </p>

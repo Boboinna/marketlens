@@ -5,7 +5,7 @@ const BADGE = {
   observed: "border-obs text-obs", confirmed: "border-con text-con",
   suggested: "border-sug text-sug", unknown: "border-line text-mu border-dashed",
 };
-const control = "mt-1 h-12 w-full rounded-xl border border-line bg-s2 px-3.5 text-base outline-none sm:h-11 sm:text-[15px]";
+const control = "mt-1 h-12 w-full max-[430px]:min-w-0 max-[430px]:max-w-full rounded-xl border border-line bg-s2 px-3.5 text-base outline-none sm:h-11 sm:text-[15px]";
 
 interface Props {
   n?: number; fact: Fact; hint?: string;
@@ -19,11 +19,11 @@ interface Props {
 export function FactRow({ n, fact, hint, onChange, onLabel, onRemove, onConfirm }: Props) {
   const id = `f-${fact.key}`;
   return (
-    <div className="grid grid-cols-[28px_1fr] items-start gap-x-3 gap-y-2 sm:gap-x-4 border-t border-line py-4 first:border-t-0 sm:grid-cols-[28px_1fr_auto]">
-      <span className={`mt-0.5 flex size-7 items-center justify-center rounded-full border-[1.5px] font-mono text-xs ${BADGE[fact.status]}`}>{n ?? ""}</span>
+    <div className="grid grid-cols-[28px_1fr] max-[430px]:grid-cols-[24px_minmax(0,1fr)] max-[430px]:gap-x-2 items-start gap-x-3 gap-y-2 sm:gap-x-4 border-t border-line py-4 first:border-t-0 sm:grid-cols-[28px_1fr_auto]">
+      <span className={`mt-0.5 flex size-7 max-[430px]:size-6 items-center justify-center rounded-full border-[1.5px] font-mono text-xs ${BADGE[fact.status]}`}>{n ?? ""}</span>
       <div className="min-w-0">
         {onLabel ? (
-          <input aria-label="Detail name" value={fact.label} onChange={(e) => onLabel(e.target.value)} className="h-7 w-full bg-transparent font-mono text-xs text-mu outline-none" />
+          <input aria-label="Detail name" value={fact.label} onChange={(e) => onLabel(e.target.value)} className="h-7 w-full max-[430px]:min-w-0 bg-transparent font-mono text-xs text-mu outline-none" />
         ) : (
           <label htmlFor={id} className="font-mono text-xs text-mu">{fact.label}</label>
         )}
@@ -38,12 +38,12 @@ export function FactRow({ n, fact, hint, onChange, onLabel, onRemove, onConfirm 
         {fact.status === "observed" && fact.evidence && <p className="mt-1 text-xs text-mu">Seen: {fact.evidence}</p>}
         {fact.status === "suggested" && fact.evidence && <p className="mt-1 text-xs text-mu">AI-suggested: {fact.evidence}</p>}
       </div>
-      <div className="col-start-2 flex items-center gap-3 sm:col-start-3 sm:pt-6">
+      <div className="col-start-2 flex items-center gap-3 max-[430px]:flex-wrap max-[430px]:gap-x-2 max-[430px]:gap-y-1.5 sm:col-start-3 sm:pt-6">
         <StatusChip status={fact.status} label={fact.status === "unknown" ? "Blank" : undefined} />
         {fact.status === "suggested" && onConfirm && (
-          <button onClick={onConfirm} className="h-8 rounded-lg border border-[#3a434e] px-3 text-[13px] font-semibold hover:bg-s2">Confirm</button>
+          <button onClick={onConfirm} className="h-8 rounded-lg border border-[#3a434e] px-3 max-[430px]:px-2.5 text-[13px] font-semibold hover:bg-s2">Confirm</button>
         )}
-        {onRemove && <button onClick={onRemove} aria-label={`Remove ${fact.label}`} className="text-xs text-mu hover:text-err">Remove</button>}
+        {onRemove && <button onClick={onRemove} aria-label={`Remove ${fact.label}`} className="text-xs text-mu hover:text-err max-[430px]:min-h-8 max-[430px]:px-1">Remove</button>}
       </div>
     </div>
   );

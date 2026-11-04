@@ -43,7 +43,7 @@ export function ImageSettings({ value, onChange, hasMeasurements, hasCallouts, h
 
       <div>
         <p className="mb-2 text-sm text-mu">Aspect ratio</p>
-        <div role="group" aria-label="Aspect ratio" className="grid grid-cols-3 gap-2">
+        <div role="group" aria-label="Aspect ratio" className="grid grid-cols-3 max-[430px]:gap-1.5 gap-2 max-[430px]:[&>*]:min-w-0">
           {RATIO_IDS.map((r) => (
             <button key={r} type="button" aria-pressed={value.ratio === r} onClick={() => patch({ ratio: r })} className={pill(value.ratio === r)}>
               <span>{r}</span>
@@ -58,14 +58,14 @@ export function ImageSettings({ value, onChange, hasMeasurements, hasCallouts, h
         <textarea
           id="scene-notes" rows={3} value={value.notes} maxLength={NOTES_MAX} onChange={(e) => patch({ notes: e.target.value })}
           placeholder="Describe how you want the image to look, e.g. soft window light, garment shown larger, a small plant on the left"
-          className="w-full resize-y rounded-xl border border-line bg-s2 px-3.5 py-3 text-base text-tx outline-none focus:border-[#3a434e] sm:text-[15px]"
+          className="w-full max-[430px]:min-w-0 max-[430px]:max-w-full resize-y rounded-xl border border-line bg-s2 px-3.5 py-3 text-base text-tx outline-none focus:border-[#3a434e] sm:text-[15px]"
         />
         <div className="mt-2 flex flex-wrap gap-2">
           {IDEAS.map((t) => (
             <button key={t} type="button" onClick={() => addIdea(t)} className="min-h-9 rounded-full border border-line bg-s2 px-3 py-1.5 text-[13px] hover:border-tx">+ {t}</button>
           ))}
         </div>
-        <p className="mt-2 flex flex-wrap justify-between gap-x-3 text-xs text-mu">
+        <p className="mt-2 flex flex-wrap justify-between gap-x-3 max-[430px]:flex-col max-[430px]:gap-y-1 text-xs text-mu">
           <span>Your garment is never redesigned. The AI removes the mannequin, hands and hanger.</span>
           <span className="font-mono">{value.notes.length}/{NOTES_MAX}</span>
         </p>

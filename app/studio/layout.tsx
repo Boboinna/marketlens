@@ -18,9 +18,9 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <div className="min-h-dvh pb-28">
+    <div className="min-h-dvh pb-28 max-[430px]:pb-32">
       <AppHeader><Stepper /></AppHeader>
-      <div className="mx-auto max-w-6xl px-5 py-8 md:px-12 md:py-10">{children}</div>
+      <div className="mx-auto max-w-6xl px-5 max-[430px]:px-3 py-8 md:px-12 md:py-10">{children}</div>
     </div>
   );
 }

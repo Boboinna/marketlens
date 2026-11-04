@@ -154,13 +154,13 @@ export default function ResultPage() {
   };
 
   return (
-    <div className="space-y-5 pb-2">
+    <div className="space-y-5 pb-2 max-[430px]:min-w-0">
       <div>
         <h1 className="text-xl font-semibold tracking-tight sm:text-3xl">Your listing and images</h1>
         <p className="mt-2 text-sm text-mu sm:text-base">Both are made from the details you approved. Edit the text freely, and make more images in other styles.</p>
       </div>
 
-      <section aria-label="Visuals" className="rounded-2xl border border-line bg-s1 p-4 sm:p-6">
+      <section aria-label="Visuals" className="rounded-2xl border border-line bg-s1 p-4 max-[430px]:p-3 sm:p-6">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">Images</h2>
           <span className="text-xs text-mu">{made} of {VISUALS_PER_PRODUCT} made for this garment</span>
@@ -212,7 +212,7 @@ export default function ResultPage() {
       </section>
 
       {current ? (
-        <section aria-label="Listing" className="space-y-4 rounded-2xl border border-line bg-s1 p-4 sm:p-6">
+        <section aria-label="Listing" className="space-y-4 rounded-2xl border border-line bg-s1 p-4 max-[430px]:p-3 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Listing</h2>
             <LangSwitch value={lang} onChange={(l) => set({ lang: l })} disabled={writing} />
@@ -241,7 +241,7 @@ export default function ResultPage() {
           <label className="block text-sm text-mu">Highlights, one per line
             <textarea className={`${field} min-h-24`} value={current.highlights.join("\n")} onChange={(e) => upd({ highlights: e.target.value.split("\n") })} onBlur={() => upd({ highlights: current.highlights.map((h) => h.trim()).filter(Boolean) })} />
           </label>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 max-[430px]:grid-cols-[minmax(0,1fr)] sm:grid-cols-2">
             <label className="block text-sm text-mu">Category<input className={field} value={current.category} onChange={(e) => upd({ category: e.target.value })} /></label>
             <label className="block text-sm text-mu">Tags (comma separated)<input className={field} value={current.tags.join(", ")} onChange={(e) => upd({ tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} /></label>
           </div>
@@ -271,9 +271,7 @@ export default function ResultPage() {
       {current && <ClaimCheck issues={issues} approved={approvedFacts(facts).length} removed={removed[lang]} />}
 
       <StickyBar>
-        <Button variant="ghost" onClick={() => router.push("/studio/details")}>
-          Back<span className="hidden sm:inline"> to details</span>
-        </Button>
+        <Button variant="ghost" onClick={() => router.push("/studio/details")}>Back<span className="hidden sm:inline">&nbsp;to details</span></Button>
         <Button disabled={!listings || saving || busy || writing} onClick={() => finish(true)}>
           {saving ? "Saving…" : `Save listing${visuals.length ? ` with ${visuals.length} ${visuals.length === 1 ? "image" : "images"}` : ""}`}
         </Button>

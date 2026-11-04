@@ -12,7 +12,7 @@ interface Props {
   left: number; total: number; busy: boolean; canMake: boolean; onMake: () => void;
 }
 
-const select = "mt-1 h-12 w-full rounded-xl border border-line bg-s2 px-3 text-base text-tx outline-none disabled:opacity-60 sm:text-sm";
+const select = "mt-1 h-12 w-full max-[430px]:min-w-0 max-[430px]:max-w-full rounded-xl border border-line bg-s2 px-3 text-base text-tx outline-none disabled:opacity-60 sm:text-sm";
 
 /**
  * Pick a different style, background or aspect ratio, add extra details in your own words, then make another image.
@@ -22,7 +22,7 @@ export function RegenBar({ value, onChange, hasMeasurements, hasCallouts, hasTit
   const patch = (p: Partial<VisualSettings>) => onChange({ ...value, ...p });
   return (
     <div className="mt-5 border-t border-line pt-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 max-[430px]:grid-cols-[minmax(0,1fr)] max-[430px]:[&>*]:min-w-0 sm:grid-cols-2">
         <div><p className="mb-1 text-xs text-mu">Style</p><StylePicker compact value={value.style} onChange={(style) => onChange(withStyle(value, style))} blocked={(id) => blockedReason(id, hasMeasurements, hasCallouts, hasTitle)} /></div>
         <div><p className="mb-1 text-xs text-mu">Background</p><BackgroundPicker style={value.style} value={value.bg} custom={value.customBg} disabled={busy} onChange={(bg) => patch({ bg, customBg: bg === "custom" ? value.customBg : "" })} onCustom={(customBg) => patch({ customBg })} /></div>
         <label className="text-xs text-mu">Aspect ratio
@@ -32,13 +32,13 @@ export function RegenBar({ value, onChange, hasMeasurements, hasCallouts, hasTit
         </label>
       </div>
 
-      <label className="mt-3 block text-xs text-mu">Extra details for this image (optional)
+      <label className="mt-3 block max-[430px]:min-w-0 text-xs text-mu">Extra details for this image (optional)
         <textarea
           rows={3} disabled={busy} value={value.notes} maxLength={NOTES_MAX} onChange={(e) => patch({ notes: e.target.value })}
           placeholder="Tell the AI what to change, e.g. show the garment larger, warmer light, lighter background"
           className="mt-1 w-full resize-y rounded-xl border border-line bg-s2 px-3.5 py-3 text-base text-tx outline-none disabled:opacity-60 sm:text-[15px]"
         />
-        <span className="mt-1 flex justify-between gap-3">
+        <span className="mt-1 flex justify-between gap-3 max-[430px]:flex-col max-[430px]:gap-1">
           <span>Your garment itself is never redesigned.</span>
           <span className="font-mono">{value.notes.length}/{NOTES_MAX}</span>
         </span>

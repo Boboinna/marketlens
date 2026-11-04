@@ -48,12 +48,12 @@ export function Measurements({ facts, onChange }: Props) {
           ))}
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-3 max-[430px]:gap-2 gap-3 max-[430px]:[&>*]:min-w-0">
         {MEASURE_FIELDS.map((m) => (
           <label key={m.key} className="block font-mono text-xs text-mu">{m.label.replace(" (measured)", "")}
             <div className="relative">
-              <input inputMode="decimal" value={num(m.key)} onChange={(e) => write(m.key, m.label, e.target.value, unit)} placeholder="—" aria-label={`${m.label} in ${unit}`} className={`${control} pr-9`} />
-              <span className="pointer-events-none absolute right-3 top-1/2 mt-0.5 -translate-y-1/2 text-xs text-mu">{unit}</span>
+              <input inputMode="decimal" value={num(m.key)} onChange={(e) => write(m.key, m.label, e.target.value, unit)} placeholder="—" aria-label={`${m.label} in ${unit}`} className={`${control} pr-9 max-[430px]:px-2 max-[430px]:pr-7`} />
+              <span className="pointer-events-none absolute right-3 max-[430px]:right-2 top-1/2 mt-0.5 -translate-y-1/2 text-xs text-mu">{unit}</span>
             </div>
           </label>
         ))}

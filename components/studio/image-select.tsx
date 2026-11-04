@@ -48,7 +48,7 @@ export function ImageSelect({ label, value, options, onChange, disabled }: Props
   let lastGroup: string | undefined;
   return (
     <div
-      ref={root} className="relative"
+      ref={root} className="relative max-[430px]:min-w-0 max-[430px]:max-w-full"
       onKeyDown={(e) => {
         if (e.key === "Escape") { setOpen(false); root.current?.querySelector("button")?.focus(); }
         if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (!open) setOpen(true); else move(e.key === "ArrowDown" ? 1 : -1); }
@@ -57,7 +57,7 @@ export function ImageSelect({ label, value, options, onChange, disabled }: Props
       <button
         type="button" disabled={disabled} aria-haspopup="listbox" aria-expanded={open} aria-label={`${label}: ${cur?.label}`} aria-controls={uid}
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-xl border border-line bg-s2 py-1.5 pl-3.5 pr-2 text-left outline-none hover:border-[#3a434e] focus-visible:border-tx disabled:opacity-60"
+        className="flex min-h-14 w-full max-[430px]:min-w-0 max-[430px]:max-w-full items-center justify-between gap-3 max-[430px]:gap-2 rounded-xl border border-line bg-s2 py-1.5 pl-3.5 pr-2 text-left outline-none hover:border-[#3a434e] focus-visible:border-tx disabled:opacity-60"
       >
         <span className="min-w-0"><span className="block truncate text-[15px] font-medium">{cur?.label}</span>{cur?.hint && <span className="block truncate text-xs text-mu">{cur.hint}</span>}</span>
         <span className="flex shrink-0 items-center gap-2"><Thumb src={cur?.thumb ?? ""} label={cur?.label ?? ""} /><span aria-hidden className="text-mu">▾</span></span>
